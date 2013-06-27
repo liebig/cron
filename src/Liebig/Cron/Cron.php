@@ -1,10 +1,11 @@
 <?php
+
 /**
  * Cron - Job scheduling for Laravel
  *
  * @author      Marc Liebig
  * @copyright   2013 Marc Liebig
- * @link
+ * @link        https://github.com/liebig/cron/
  * @license     http://opensource.org/licenses/MIT
  * @version     1.0.0
  * @package     Cron
@@ -30,6 +31,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 namespace Liebig\Cron;
 
 /**
@@ -93,7 +95,7 @@ class Cron {
         $expression = \Cron\CronExpression::factory($expression);
 
         // Add the new created cron job to the many other little cron jobs and return null because everything is fine
-        array_push(self::$crons , array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
+        array_push(self::$crons, array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
         return null;
     }
 
@@ -108,8 +110,23 @@ class Cron {
         // Get the rundate
         $runDate = new \DateTime();
 
+        
+        // Check if the last run is one minute ago
+        $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
+        $lastRun = new \DateTime($lastManager[0]->rundate);
+        $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
+        
+        if ($timeBetween >= 90) {
+            echo '<h1>TOO LATE: ' . $timeBetween . '</h1>';
+        } elseif ($timeBetween <= 30) {
+            echo '<h1>TOO FAST: ' . $timeBetween . '</h1>';
+        } else {
+            echo '<h1>In Time: ' . $timeBetween . '</h1>';
+        }
+        
         // Initialize the crons array, errors count and start runtime time
         $cronsEvaluation = array();
+        $cronErrors = array();
         $errors = 0;
         $beforeAll = microtime(true);
 
@@ -125,14 +142,17 @@ class Cron {
                 // Run the function and save the return to $return - all the magic goes here
                 $return = $cron['function']();
 
-                // If the function returned 'false' then we assume that there was an error
-                if ($return === false) {
+                // Get the end time of the job runtime
+                $afterOne = microtime(true);
+                
+                // If the function returned not null then we assume that there was an error
+                if ($return !== null) {
+                    // Add to error array
+                    array_push($cronErrors, array('name' => $cron['name'], 'return' => $return, 'rundate' => $runDate->getTimestamp(), 'runtime' => ($afterOne - $beforeOne)));
+                    
                     // Errors count plus one
                     $errors++;
                 }
-
-                // Get the end time of the job runtime
-                $afterOne = microtime(true);
 
                 // Push the information of the run cron job to the crons array (including name, return value, rundate, runtime)
                 array_push($cronsEvaluation, array('name' => $cron['name'], 'return' => $return, 'rundate' => $runDate->getTimestamp(), 'runtime' => ($afterOne - $beforeOne)));
@@ -142,6 +162,31 @@ class Cron {
         // Get the end runtime for all the cron jobs
         $afterAll = microtime(true);
 
+        $cronmanager = new\Liebig\Cron\models\Manager;
+        $cronmanager->rundate = $runDate;
+        $cronmanager->runtime = $afterAll - $beforeAll;
+        $cronmanager->errors = $errors;
+        $cronmanager->save();
+        
+        
+        foreach ($cronErrors as $cronError) {
+            $errorEntry = new \Liebig\Cron\models\Error;
+            $errorEntry->name = $cronError['name'];
+            
+            $returnType = gettype($cronError['return']);
+            if ($returnType === 'boolean' ||  $returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
+                $errorEntry->return = substr((string) $cronError['return'], 0, 5000);
+            } else {
+                $errorEntry->return = 'Return value cannot be displayed as string (type error)';
+            }
+            
+            
+            $errorEntry->runtime = $cronError['runtime'];
+            $errorEntry->rundate = $runDate;
+            $errorEntry->cron_manager_id = $cronmanager->id;
+            $errorEntry->save();
+        }
+        
         // Return the cron jobs array (including rundate, runtime, errors and an other array with the cron jobs information)
         return array('rundate' => $runDate->getTimestamp(), 'runtime' => ($afterAll - $beforeAll), 'errors' => $errors, 'crons' => $cronsEvaluation);
     }
