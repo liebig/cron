@@ -24,15 +24,18 @@ class CronServiceProvider extends ServiceProvider {
 
         \Liebig\Cron\Cron::add('test', '* * * * *', function() {
                     echo '<h1>cron runned!</h1>';
-                    return true;
+                    return array('test', 'test123');
                 });
 
         \Liebig\Cron\Cron::add('test', '*/2 * * * *', function() {
                     echo '<h1>cron not runned!</h1>';
-                    return false;
+                    return new \Liebig\Cron\models\Error;
                 });
 
         var_dump(\Liebig\Cron\cron::run());
+                
+
+
     }
 
     /**
