@@ -1,0 +1,23 @@
+{
+    "name": "liebig/cron",
+    "description": "",
+    "authors": [
+        {
+            "name": "Marc Liebig",
+            "email": "marc.liebig@gmx.eu"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.0.x"
+    },
+    "autoload": {
+        "classmap": [
+            "src/migrations"
+        ],
+        "psr-0": {
+            "Liebig\\Cron": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
