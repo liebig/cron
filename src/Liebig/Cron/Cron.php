@@ -53,6 +53,12 @@ class Cron {
     private static $crons = array();
 
     /**
+     * @static
+     * @var \Monolog\Logger Logger object if logging is requested or null if nothing should be logged.
+     */
+    private static $logger;
+
+    /**
      * Add a cron job
      *
      * Expression definition:
@@ -110,21 +116,18 @@ class Cron {
         // Get the rundate
         $runDate = new \DateTime();
 
-        
-        // Check if the last run is one minute ago
+
+        // Get the time (in seconds) between this and the last run and save this to $timeBetween
         $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
-        $lastRun = new \DateTime($lastManager[0]->rundate);
-        $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
-        
-        if ($timeBetween >= 90) {
-            echo '<h1>TOO LATE: ' . $timeBetween . '</h1>';
-        } elseif ($timeBetween <= 30) {
-            echo '<h1>TOO FAST: ' . $timeBetween . '</h1>';
+        if (!empty($lastManager[0])) {
+            $lastRun = new \DateTime($lastManager[0]->rundate);
+            $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
         } else {
-            echo '<h1>In Time: ' . $timeBetween . '</h1>';
+            // No previous cron job runs are found
+            $timeBetween = -1;
         }
-        
-        // Initialize the crons array, errors count and start runtime time
+
+        // Initialize the crons array, errors count and start the runtime calculation
         $cronsEvaluation = array();
         $cronErrors = array();
         $errors = 0;
@@ -144,12 +147,12 @@ class Cron {
 
                 // Get the end time of the job runtime
                 $afterOne = microtime(true);
-                
+
                 // If the function returned not null then we assume that there was an error
                 if ($return !== null) {
                     // Add to error array
                     array_push($cronErrors, array('name' => $cron['name'], 'return' => $return, 'rundate' => $runDate->getTimestamp(), 'runtime' => ($afterOne - $beforeOne)));
-                    
+
                     // Errors count plus one
                     $errors++;
                 }
@@ -162,33 +165,115 @@ class Cron {
         // Get the end runtime for all the cron jobs
         $afterAll = microtime(true);
 
+        // Create a new cronmanager database object for this run and save it
         $cronmanager = new\Liebig\Cron\models\Manager;
         $cronmanager->rundate = $runDate;
         $cronmanager->runtime = $afterAll - $beforeAll;
         $cronmanager->errors = $errors;
         $cronmanager->save();
-        
-        
+
+        // Check if the run between this run and the last run is in time or not and log this event
+        if ($timeBetween === -1) {
+            self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
+        } elseif ($timeBetween >= 90) {
+            self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+        } elseif ($timeBetween <= 30) {
+            self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
+        } else {
+            self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
+        }
+
+        // Walk over the cron error jobs (which returned not null) and save them to the database as object
         foreach ($cronErrors as $cronError) {
             $errorEntry = new \Liebig\Cron\models\Error;
             $errorEntry->name = $cronError['name'];
-            
+
+            // Get the type of the returned value
             $returnType = gettype($cronError['return']);
-            if ($returnType === 'boolean' ||  $returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
+            // If this type is a boolean, integer, double or string we can cast it to String and save it to the error database object
+            if ($returnType === 'boolean' || $returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
+                // We cut the string at 5000 characters to not carried away and to stay the database healthy
                 $errorEntry->return = substr((string) $cronError['return'], 0, 5000);
             } else {
-                $errorEntry->return = 'Return value cannot be displayed as string (type error)';
+                $errorEntry->return = 'Return value of type ' . $returnType . ' cannot be displayed as string (type error)';
             }
-            
-            
+
             $errorEntry->runtime = $cronError['runtime'];
             $errorEntry->rundate = $runDate;
             $errorEntry->cron_manager_id = $cronmanager->id;
             $errorEntry->save();
         }
-        
+
         // Return the cron jobs array (including rundate, runtime, errors and an other array with the cron jobs information)
         return array('rundate' => $runDate->getTimestamp(), 'runtime' => ($afterAll - $beforeAll), 'errors' => $errors, 'crons' => $cronsEvaluation);
+    }
+
+    /**
+     * Add a Monolog logger object and activate logging - if no parameter is given, the logger will be removed and cron logging is disabled
+     *
+     * @static
+     * @param  \Monolog\Logger $logger optional The Monolog logger object which will be used for cron logging - if no parameter is given the logger will be removed
+     */
+    public static function setLogger(\Monolog\Logger $logger = null) {
+        self::$logger = $logger;
+    }
+
+    /**
+     * Get the Monolog logger object
+     *
+     * @static
+     * @return  \Monolog\Logger Return the set logger object - return null if no logger is set
+     */
+    public static function getLogger() {
+        return self::$logger;
+    }
+
+    /**
+     * Log a message with the given level to the Monolog logger object if one is set
+     *
+     * @static
+     * @param  string $level The logger level as string which can be debug, info, notice, warning, error, critival, alert, emergency
+     * @param  string $message The message which will be logged to Monolog
+     */
+    private static function log($level, $message) {
+
+        // If no Monolog logger object is set jus retun false
+        if (!empty(self::$logger)) {
+            // Switch the lower case level string and log the message with the given level
+            switch (strtolower($level)) {
+                case "debug":
+                    self::$logger->addDebug($message);
+                    break;
+                case "info":
+                    self::$logger->addInfo($message);
+                    break;
+                case "notice":
+                    self::$logger->addNotice($message);
+                    break;
+                case "warning":
+                    self::$logger->addWarning($message);
+                    break;
+                case "error":
+                    self::$logger->addError($message);
+                    break;
+                case "critical":
+                    self::$logger->addCritical($message);
+                    break;
+                case "alert":
+                    self::$logger->addAlert($message);
+                    break;
+                case "emergency":
+                    self::$logger->addEmergency($message);
+                    break;
+                default:
+                    return false;
+                    break;
+            }
+
+            return null;
+        } else {
+            return false;
+        }
     }
 
 }
