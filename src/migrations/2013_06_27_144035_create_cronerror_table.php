@@ -15,7 +15,6 @@ class CreateCronerrorTable extends Migration {
                     $table->string('name');
                     $table->text('return');
                     $table->float('runtime');
-                    $table->dateTime('rundate');
                     $table->integer('cron_manager_id');
                     $table->timestamps();
                 });
