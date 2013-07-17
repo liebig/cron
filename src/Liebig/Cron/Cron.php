@@ -130,7 +130,6 @@ class Cron {
         // Initialize the crons array, errors count and start the runtime calculation
         $cronsEvaluation = array();
         $cronErrors = array();
-        $errors = 0;
         $beforeAll = microtime(true);
 
         // For all defined crons run this
@@ -151,14 +150,11 @@ class Cron {
                 // If the function returned not null then we assume that there was an error
                 if ($return !== null) {
                     // Add to error array
-                    array_push($cronErrors, array('name' => $cron['name'], 'return' => $return, 'rundate' => $runDate->getTimestamp(), 'runtime' => ($afterOne - $beforeOne)));
-
-                    // Errors count plus one
-                    $errors++;
+                    array_push($cronErrors, array('name' => $cron['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
                 }
 
                 // Push the information of the run cron job to the crons array (including name, return value, rundate, runtime)
-                array_push($cronsEvaluation, array('name' => $cron['name'], 'return' => $return, 'rundate' => $runDate->getTimestamp(), 'runtime' => ($afterOne - $beforeOne)));
+                array_push($cronsEvaluation, array('name' => $cron['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
             }
         }
 
@@ -169,18 +165,22 @@ class Cron {
         $cronmanager = new\Liebig\Cron\models\Manager;
         $cronmanager->rundate = $runDate;
         $cronmanager->runtime = $afterAll - $beforeAll;
-        $cronmanager->errors = $errors;
         $cronmanager->save();
 
+        $inTime = false;
         // Check if the run between this run and the last run is in time or not and log this event
         if ($timeBetween === -1) {
             self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
+            $inTime = null;
         } elseif ($timeBetween >= 90) {
             self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+            $inTime = false;
         } elseif ($timeBetween <= 30) {
             self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
+            $inTime = false;
         } else {
             self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
+            $inTime = true;
         }
 
         // Walk over the cron error jobs (which returned not null) and save them to the database as object
@@ -199,13 +199,19 @@ class Cron {
             }
 
             $errorEntry->runtime = $cronError['runtime'];
-            $errorEntry->rundate = $runDate;
             $errorEntry->cron_manager_id = $cronmanager->id;
             $errorEntry->save();
         }
 
+        // Log the result of the cron run
+        if (empty($cronErrors)) {
+            self::log('info', 'The cron run with the manager id ' . $cronmanager->id . ' was finished without errors.');
+        } else {
+            self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($cronErrors) . ' errors.');
+        }
+
         // Return the cron jobs array (including rundate, runtime, errors and an other array with the cron jobs information)
-        return array('rundate' => $runDate->getTimestamp(), 'runtime' => ($afterAll - $beforeAll), 'errors' => $errors, 'crons' => $cronsEvaluation);
+        return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($cronErrors), 'crons' => $cronsEvaluation);
     }
 
     /**
@@ -267,13 +273,22 @@ class Cron {
                     break;
                 default:
                     return false;
-                    break;
             }
-
-            return null;
         } else {
             return false;
         }
+    }
+    
+    /**
+     * Reset the Cron class
+     * Remove the cons array and the logger
+     *
+     * @static
+     */
+    public static function reset() {
+        
+        self::$crons = array();
+        self::$logger = null;
     }
 
 }
