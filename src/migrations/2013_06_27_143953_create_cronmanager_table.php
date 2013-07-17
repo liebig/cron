@@ -14,7 +14,6 @@ class CreateCronmanagerTable extends Migration {
                     $table->increments('id');
                     $table->dateTime('rundate');
                     $table->float('runtime');
-                    $table->integer('errors');
                     $table->timestamps();
                 });
     }
