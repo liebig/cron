@@ -21,20 +21,24 @@ class CronServiceProvider extends ServiceProvider {
     public function boot() {
         $this->package('liebig/cron');
 
+//        $cronLogger = new \Monolog\Logger('cron');
+//        $cronLogger->pushHandler(new \Monolog\Handler\StreamHandler(storage_path() . '/logs/cron-' . date('Y-m-d') . '.txt', \Monolog\Logger::DEBUG));
+//        \Liebig\Cron\Cron::setLogger($cronLogger);
+//        
+//        \Liebig\Cron\Cron::add('test', '* * * * *', function() {
+//                    echo '<h1>cron runned!</h1>';
+//                    return null;
+//                });
+//
+//        \Liebig\Cron\Cron::add('test', '*/2 * * * *', function() {
+//                    echo '<h1>cron not runned!</h1>';
+//                    return new \Liebig\Cron\models\Error;
+//                });
 
-        \Liebig\Cron\Cron::add('test', '* * * * *', function() {
-                    echo '<h1>cron runned!</h1>';
-                    return array('test', 'test123');
-                });
-
-        \Liebig\Cron\Cron::add('test', '*/2 * * * *', function() {
-                    echo '<h1>cron not runned!</h1>';
-                    return new \Liebig\Cron\models\Error;
-                });
-
-        var_dump(\Liebig\Cron\cron::run());
+//        var_dump(\Liebig\Cron\cron::run());
                 
 
+        
 
     }
 
