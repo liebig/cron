@@ -1,6 +1,7 @@
 {
     "name": "liebig/cron",
-    "description": "",
+    "description": "Job scheduling for Laravel",
+    "keywords": ["laravel","cron","cronjob","cronmanager"],
     "authors": [
         {
             "name": "Marc Liebig",
