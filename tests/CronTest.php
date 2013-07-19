@@ -128,6 +128,43 @@ class CronTest extends TestCase {
         $this->assertEquals($i, 5);
         $this->assertEquals($runResult5['inTime'], false);
     }
+    
+    /**
+     * Test method for enabling and disabling cron jobs
+     *
+     */
+    public function testRunEnabled() {
+         $i = 0;
+        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return null;
+                }, false);
+                
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 0);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 1);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 0);
+        
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 0);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 2);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 0);
+        
+        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return false;
+                }, true);
+                
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 1);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 3);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 1);
+        
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 2);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 4);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 2);
+    }
 
     /**
      * Test method for heavily run 1000 cron jobs five times
