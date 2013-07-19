@@ -38,14 +38,14 @@ Add a cron job
 ==
 Adding a cron job to Cron is very easy by using the static *add* function. As parameter the *name* of the cron job, the cron *expression* and an anonymous *function* is needed. The boolean *isEnabled* is optional and can enable or disable this cron job execution (default is enabled).
 
-'''
+```
 public static function add($name, $expression, $function, $isEnabled = true) {
-'''
+```
 
 The *name* is needed for identify a cron job if an error appears and for logging.
 
 The *expression* is a string of five or optional six subexpressions that describe details of the schedule.
-'''
+```
      *       *    *    *    *    *    *
      *       -    -    -    -    -    -
      *       |    |    |    |    |    |
@@ -55,7 +55,7 @@ The *expression* is a string of five or optional six subexpressions that describ
      *       |    |    +--------------- day of month (1 - 31)
      *       |    +-------------------- hour (0 - 23)
      *       +------------------------- min (0 - 59)
-'''
+```
 
 The given anonymous *function* will be invoked if the expression details match with the current timestamp. This function should return null in success case or anything else in if there was an error while executing this job. The error case will be logged to database and to a Monolog logger object (if logger is enabled). 
 
@@ -63,10 +63,10 @@ The *isEnabled* boolean parameter makes it possible to deactivate a job from exe
 
 Example
 =
-'''
+```
 \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return null;
                 });
-'''
+```
 
