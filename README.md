@@ -1,4 +1,4 @@
-# ![alt text](https://github.com/liebig/cron/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
+# ![alt text](https://github.com/liebig/cron/blob/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
 
 Job scheduling for Laravel
 
