@@ -107,11 +107,11 @@ class Cron {
 
     /**
      * Run the cron jobs
-     * This method checks and runs all the defined cron jobs at the right time (default is each minute - * * * * *)
+     * This method checks and runs all the defined cron jobs at the right time
      * This method (route) should be called automatically by a server or service
      * 
      * @static
-     * @param  int $repeatTime optional The time in minutes between two run method calls (default is every minute)
+     * @param  int $repeatTime optional The time in minutes between two run method calls (default is every minute - * * * * *)
      * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return values, rundate and runtime)
      */
     public static function run($repeatTime = 1) {
