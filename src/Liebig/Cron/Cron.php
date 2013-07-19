@@ -107,15 +107,21 @@ class Cron {
 
     /**
      * Run the cron jobs
-     * This method runs all the defined cron jobs and should be called each minute (* * * * *)
-     *
+     * This method checks and runs all the defined cron jobs at the right time (default is each minute - * * * * *)
+     * This method (route) should be called automatically by a server or service
+     * 
      * @static
+     * @param  int $repeatTime optional The time in minutes between two run method calls (default is every minute)
      * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return values, rundate and runtime)
      */
-    public static function run() {
+    public static function run($repeatTime = 1) {
         // Get the rundate
         $runDate = new \DateTime();
 
+        // Checking the repetTime parameter
+        if(!is_int($repeatTime)) {
+            $repeatTime = 1;
+        }
 
         // Get the time (in seconds) between this and the last run and save this to $timeBetween
         $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
@@ -172,10 +178,10 @@ class Cron {
         if ($timeBetween === -1) {
             self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
             $inTime = null;
-        } elseif ($timeBetween >= 90) {
+        } elseif (($repeatTime * 60) - $timeBetween <= -30) {
             self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
             $inTime = false;
-        } elseif ($timeBetween <= 30) {
+        } elseif (($repeatTime * 60) - $timeBetween >= 30) {
             self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
             $inTime = false;
         } else {
