@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=5.3.0",
+        "laravel/framework": "4.0.*",
         "illuminate/support": "4.0.x",
         "mtdowling/cron-expression": "1.*"
     },
