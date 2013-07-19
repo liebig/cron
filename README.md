@@ -1,5 +1,4 @@
-cron ![project status](http://stillmaintained.com/liebig/cron.png)
-====
+# cron ![project status](http://stillmaintained.com/liebig/cron.png)
 
 Job scheduling for Laravel
 
@@ -18,8 +17,7 @@ You don't need
 
 **NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
 
-Installation
-===
+## Installation
 
 **NOTE**: At the moment, this release is a workbench one. That means you need to copy it in your laravel workbench directory, not in the vendor folder. Besides there is no entry on packagist to install this package automatically with composer. With the first official release 1.0.0 we will change this. Thank you for your patience.
 
@@ -31,11 +29,10 @@ Installation
 6.  Now you can use \Liebig\Cron\Cron everywhere for free
 
 
-Usage
-===
+## Usage
 
-Add a cron job
-==
+### Add a cron job
+
 Adding a cron job to Cron is very easy by using the static **add** function. As parameter the **name** of the cron job, the cron **expression** and an anonymous **function** is needed. The boolean **isEnabled** is optional and can enable or disable this cron job execution (default is enabled).
 
 ```
@@ -44,7 +41,7 @@ public static function add($name, $expression, $function, $isEnabled = true) {
 
 The **name** is needed for identify a cron job if an error appears and for logging.
 
-The **expression** is a string of five or optional six subexpressions that describe details of the schedule.
+The **expression** is a string of five or optional six subexpressions that describe details of the schedule. The syntax is based on the Linux cron daemon definition.
 ```
      *       *    *    *    *    *    *
      *       -    -    -    -    -    -
@@ -59,14 +56,18 @@ The **expression** is a string of five or optional six subexpressions that descr
 
 The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in success case or anything else in if there was an error while executing this job. The error case will be logged to database and to a Monolog logger object (if logger is enabled). 
 
-The **isEnabled** boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easy by given a true boolean to the method. This parameter is optional and the default falue is enabled.
+The **isEnabled** boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easy by giving a true boolean to the method. This parameter is optional and the default falue is enabled.
 
-Example
-=
+#### Example
+
 ```
-\Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
-                    $i++;
+\Liebig\Cron\Cron::add('example1', '* * * * *', function()) {
+                    // Do some crazy things successfully every minute
                     return null;
+                });
+\Liebig\Cron\Cron::add('example2', '*/2 * * * *', function()) {
+                    // Oh no, this job has errors and runs every two minutes
+                    return false;
                 });
 ```
 
