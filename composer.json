@@ -2,6 +2,7 @@
     "name": "liebig/cron",
     "description": "Job scheduling for Laravel",
     "keywords": ["laravel","cron","cronjob","cronmanager"],
+    "license": "MIT",
     "authors": [
         {
             "name": "Marc Liebig",
