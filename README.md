@@ -77,7 +77,7 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
 
 ### Run the cron jobs
 
-Running the cron jobs is as easy as adding them. Just call the **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
+Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
 
 ```
 public static function run($repeatTime = 1) {
@@ -85,7 +85,7 @@ public static function run($repeatTime = 1) {
 
 The optinal **repeatTime** parameter define the time in minutes between two run method calls. In other words, the time between the cron job route will be called. If you call this route every minute (* * * * *) you do not need to define this parameter. But some cron servcie provider only support calls only every 15 or even 30 minutes. In this case you have to set this parameter to 15 or 30. This parameter is only important to determine if the current run call is in time.
 
-**NOTE**: If the cron route call is not every minute, you have to adjust your cron job expressions to fit fith the route calls.
+**NOTE**: If the route call is not every minute, you have to adjust your cron job expressions to fit with this interval.
 
 #### Example
 
@@ -93,6 +93,56 @@ The optinal **repeatTime** parameter define the time in minutes between two run 
 $report = \Liebig\Cron\Cron::run();
 // And for every 15 minutes
 // $report = \Liebig\Cron\Cron::run(15);
+```
+
+---
+
+### Set the Monolog logger
+
+If logging should be activated just add a Monolog logger object to Crons static **setLogger** method. Only Monolog is supported at the moment.
+
+```
+public static function setLogger(\Monolog\Logger $logger = null) {
+```
+
+**NOTE**: If you want to remove the logger, just call the **setLogger** method without parameters.
+
+#### Example
+
+```
+\Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
+// And remove the logger again
+// \Liebig\Cron\Cron::setLogger();
+```
+
+---
+
+### Get the Monolog logger
+
+To recieve the set logger object use the static **getLogger** method.
+
+```
+public static function getLogger() {
+```
+
+---
+
+### Reset Cron
+
+To reset the cron management call the static **setLogger** method. It removes all added cron jobs and the Monolog logger object, if one is set.
+
+```
+public static function reset() {
+```
+
+---
+
+#### Example
+
+```
+\Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
+// And remove the logger again
+// \Liebig\Cron\Cron::setLogger();
 ```
 
 ---
