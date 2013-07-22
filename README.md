@@ -16,6 +16,8 @@ You don't need
 
 **NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
 
+---
+
 ## Installation
 
 **NOTE**: At the moment, this release is a workbench one. That means you need to copy it in your laravel workbench directory, not in the vendor folder. Besides there is no entry on packagist to install this package automatically with composer. With the first official release 1.0.0 we will change this. Thank you for your patience.
@@ -27,6 +29,7 @@ You don't need
 5.  Migrate the database with running the command 'php artisan migrate --bench="Liebig/Cron"'
 6.  Now you can use \Liebig\Cron\Cron everywhere for free
 
+---
 
 ## Usage
 
@@ -91,6 +94,8 @@ $report = \Liebig\Cron\Cron::run();
 // And for every 15 minutes
 // $report = \Liebig\Cron\Cron::run(15);
 ```
+
+---
 
 ## License
 
