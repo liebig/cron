@@ -45,15 +45,15 @@ The **name** is needed for identify a cron job if an error appears and for loggi
 
 The **expression** is a string of five or optional six subexpressions that describe details of the schedule. The syntax is based on the Linux cron daemon definition.
 ```
-     *       *    *    *    *    *    *
-     *       -    -    -    -    -    -
-     *       |    |    |    |    |    |
-     *       |    |    |    |    |    + year [optional]
-     *       |    |    |    |    +----- day of week (0 - 7) (Sunday=0 or 7)
-     *       |    |    |    +---------- month (1 - 12)
-     *       |    |    +--------------- day of month (1 - 31)
-     *       |    +-------------------- hour (0 - 23)
-     *       +------------------------- min (0 - 59)
+    *    *    *    *    *    *
+    -    -    -    -    -    -
+    |    |    |    |    |    |
+    |    |    |    |    |    + year [optional]
+    |    |    |    |    +----- day of week (0 - 7) (Sunday=0 or 7)
+    |    |    |    +---------- month (1 - 12)
+    |    |    +--------------- day of month (1 - 31)
+    |    +-------------------- hour (0 - 23)
+    +------------------------- min (0 - 59)
 ```
 
 The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in success case or anything else in if there was an error while executing this job. The error case will be logged to database and to a Monolog logger object (if logger is enabled). 
