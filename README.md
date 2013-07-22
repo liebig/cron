@@ -70,6 +70,8 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
                 }, true);
 ```
 
+---
+
 ### Run the cron jobs
 
 Running the cron jobs is as easy as adding them. Just call the **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
