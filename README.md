@@ -1,5 +1,4 @@
 # ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
-
 Job scheduling for Laravel
 
 Cron can be used for easily manage cron jobs in laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). In this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called. And that is the Cron magic! Additionally Cron logs every run whith the run error jobs (which not returned null) for you into the database and if you whish to a Monolog logger instance. This cron package is a holistic cron manager four your Laravel website.  
@@ -71,6 +70,25 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
                 }, true);
 ```
 
+### Run the cron jobs
+
+Running the cron jobs is as easy as adding them. Just call the **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
+
+```
+public static function run($repeatTime = 1) {
+```
+
+The optinal **repeatTime** parameter define the time in minutes between two run method calls. In other words, the time between the cron job route will be called. If you call this route every minute (* * * * *) you do not need to define this parameter. But some cron servcie provider only support calls only every 15 or even 30 minutes. In this case you have to set this parameter to 15 or 30. This parameter is only important to determine if the current run call is in time.
+
+**NOTE**: If the cron route call is not every minute, you have to adjust your cron job expressions to fit fith the route calls.
+
+#### Example
+
+```
+$report = \Liebig\Cron\Cron::run();
+// And for every 15 minutes
+// $report = \Liebig\Cron\Cron::run(15);
+```
 
 ## License
 
