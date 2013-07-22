@@ -1,7 +1,7 @@
 {
     "name": "liebig/cron",
     "description": "Job scheduling for Laravel",
-    "keywords": ["laravel","cron","cronjob","cronmanager"],
+    "keywords": ["laravel", "cron", "cronjob", "cronmanager"],
     "license": "MIT",
     "authors": [
         {
@@ -11,8 +11,7 @@
     ],
     "require": {
         "php": ">=5.3.0",
-        "laravel/framework": "4.0.*",
-        "illuminate/support": "4.0.x",
+		"illuminate/support": "4.0.x",
         "mtdowling/cron-expression": "1.*"
     },
     "autoload": {
