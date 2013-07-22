@@ -75,6 +75,26 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
 
 ---
 
+### Remove a cron job
+
+To remove a set cron job on runtime use the **remove** method with the cron job name as string parameter.
+
+```
+public static function remove($name) {
+```
+
+#### Example
+
+```
+\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
+\Liebig\Cron\Cron::remove('example1');
+```
+
+---
+
 ### Run the cron jobs
 
 Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
@@ -140,9 +160,14 @@ public static function reset() {
 #### Example
 
 ```
+\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
 \Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
-// And remove the logger again
-// \Liebig\Cron\Cron::setLogger();
+\Liebig\Cron\Cron::reset();
+// \Liebig\Cron\Cron::getLogger() === NULL
+// \Liebig\Cron\Cron::remove('example1') === false
 ```
 
 ---
