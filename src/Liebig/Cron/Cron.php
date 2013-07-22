@@ -55,7 +55,7 @@ class Cron {
      *       +------------------------- min (0 - 59)
      *
      * @static
-     * @param  string $name The name for the cron job
+     * @param  string $name The name for the cron job - must be unique
      * @param  string $expression The cron job expression (e.g. for every minute: '* * * * *')
      * @param  function $function The anonymous function which will be executed
      * @param  boolean $isEnabled optional If the cron job is enabled or not - the standard configuration is true
@@ -64,7 +64,7 @@ class Cron {
     public static function add($name, $expression, $function, $isEnabled = true) {
 
         // Check if the given expression is set and is correct
-        if (!isset($expression) || count(explode(' ', $expression)) < 5) {
+        if (!isset($expression) || count(explode(' ', $expression)) < 5 || count(explode(' ', $expression)) > 5) {
             return false;
         }
 
@@ -77,6 +77,13 @@ class Cron {
         if (!is_bool($isEnabled)) {
             $isEnabled = true;
         }
+        
+        // Check if the name is unique
+        foreach (self::$crons as $cron) {
+            if ($cron['name'] === $name){
+                return false;
+            }
+        }
 
         // Create the CronExpression - all the magic goes here
         $expression = \Cron\CronExpression::factory($expression);
@@ -85,6 +92,25 @@ class Cron {
         array_push(self::$crons, array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
         return null;
     }
+    
+    /**
+     * Remove a cron job from execution by name
+     * 
+     * @static
+     * @param string $name The name of the cron job which should be removed from execution
+     * @return null|false Retun null if a cron job with the given name was found and was successfully removed or return false if no job with the given name was found
+     */
+    public static function remove($name) {
+    
+        foreach (self::$crons as $cronKey => $cronValue) {
+            if ($cronValue['name'] === $name) {
+                unset(self::$crons[$cronKey]);
+                return null;
+            }
+        }
+        return false;
+    }
+    
 
     /**
      * Run the cron jobs

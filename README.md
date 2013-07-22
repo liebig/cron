@@ -91,7 +91,7 @@ The optinal **repeatTime** parameter define the time in minutes between two run 
 
 ```
 $report = \Liebig\Cron\Cron::run();
-// And for every 15 minutes
+// And for a interval of 15 minutes
 // $report = \Liebig\Cron\Cron::run(15);
 ```
 
@@ -119,7 +119,7 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 
 ### Get the Monolog logger
 
-To recieve the set logger object use the static **getLogger** method.
+To recieve the set logger object use the static **getLogger** method. If no logger object is set, null will be returned. 
 
 ```
 public static function getLogger() {
