@@ -20,14 +20,11 @@ You don't need
 
 ## Installation
 
-**NOTE**: At the moment, this release is a workbench one. That means you need to copy it in your laravel workbench directory, not in the vendor folder. Besides there is no entry on packagist to install this package automatically with composer. With the first official release 1.0.0 we will change this. Thank you for your patience.
-
-1.  Download the master branch (e.g. as ZIP or clone it)
-2.  Extract all the files in YOURLARAVELFOLDER\workbench\liebig\cron\ directory (yes, you have to create the folders liebig\cron)
-3.  Run the "composer update" command in your shell from YOURLARAVELFOLDER\workbench\liebig\cron\ (we need some additional libraries - find more about composer at http://getcomposer.org/)
-4.  Add 'Liebig\Cron\CronServiceProvider' to your 'providers' array in the app\config\app.php file
-5.  Migrate the database with running the command 'php artisan migrate --bench="Liebig/Cron"'
-6.  Now you can use \Liebig\Cron\Cron everywhere for free
+1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require": {` section (Find more about composer at http://getcomposer.org/)
+3.  Run the `composer update --no-dev` command in your shell from your `/laravel/` directory 
+4.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
+5.  Migrate the database with running the command 'php artisan migrate --package="Liebig/Cron"'
+6.  Now you can use `\Liebig\Cron\Cron` everywhere for free
 
 ---
 
@@ -201,7 +198,7 @@ Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
 });
 ```
 
-And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google know many good provider
+And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google know many good provider.
 
 ---
 
