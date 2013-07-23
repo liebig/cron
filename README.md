@@ -172,6 +172,39 @@ public static function reset() {
 
 ---
 
+## Full example
+
+First we create a route which should be called in an defined interval.
+
+**NOTE**: We have to protect this route because if someone call this uncontrolled our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.
+
+```
+Route::get('/Cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
+
+});
+```
+
+Now we can add our cron jobs to this route and of course call the run method. At the end we print the report out.
+
+```
+Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
+    \Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+                        // Do some crazy things every minute
+                        return null;
+                    });
+    \Liebig\Cron\Cron::add('example2', '*/2 * * * *', function() {
+                        // Do some crazy things every two minutes
+                        return null;
+                    });
+    $report = \Liebig\Cron\Cron::run(1);
+    print_r ($report);
+});
+```
+
+And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google know many good provider
+
+---
+
 ## License
 
 The MIT License (MIT)
