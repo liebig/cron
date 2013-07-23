@@ -98,7 +98,7 @@ class CronTest extends TestCase {
         $this->assertEquals(count($runResult1['crons']), 1);
         $this->assertEquals($runResult1['crons'][0]['name'], 'test1');
         $this->assertEquals($runResult1['crons'][0]['return'], null);
-        $this->assertEquals($runResult1['inTime'], null);
+        $this->assertEquals($runResult1['inTime'], -1);
 
         \Liebig\Cron\Cron::add('test2', '* * * * *', function() {
                     return 'return of test2';
