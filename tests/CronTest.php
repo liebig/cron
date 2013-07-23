@@ -34,7 +34,7 @@ class CronTest extends TestCase {
         \Liebig\Cron\Cron::reset();
 
         // Migrate all database tables
-        \Artisan::call('migrate', array('--bench' => 'Liebig/Cron'));
+        \Artisan::call('migrate', array('--package' => 'Liebig/Cron'));
 
         // Set the path to logfile to the laravel storage / logs / directory as test.txt file
         // NOTE: THIS FILE MUST BE DELETED EACH TIME AFTER THE UNIT TEST WAS STARTED
