@@ -184,7 +184,7 @@ class Cron {
         // Check if the run between this run and the last run is in time or not and log this event
         if ($timeBetween === -1) {
             self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
-            $inTime = null;
+            $inTime = -1;
         } elseif (($repeatTime * 60) - $timeBetween <= -30) {
             self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
             $inTime = false;
