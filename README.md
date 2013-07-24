@@ -3,6 +3,24 @@ Job scheduling for Laravel
 
 Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the error jobs (which not returned null) into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
 
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [--Add a cron job](#addjob)
+- [--Remove a cron job](#removejob)
+- [--Run the cron jobs](#runjob)
+- [--Set the Monolog logger](#setlogger)
+- [--Get the Monolog logger](#getlogger)
+- [--Disable database logging](#disabledatabaselogging)
+- [--Reset Cron](#reset)
+- [Full example](#fullexample)
+
+---
+
+<a name="overview"></a>
+## Overview
+
 You need
 *   this package
 *   to define a route with all cron job definations and closing with the run() method call
@@ -15,17 +33,6 @@ You don't need
 *   to worry about (cron) job management anymore
 
 **NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
-
-- [Installation](#installation)
-- [Usage](#usage)
-- [--Add a cron job](#addjob)
-- [--Remove a cron job](#removejob)
-- [--Run the cron jobs](#runjob)
-- [--Set the Monolog logger](#setlogger)
-- [--Get the Monolog logger](#getlogger)
-- [--Disable database logging](#disabledatabaselogging)
-- [--Reset Cron](#reset)
-- [Full example](#fullexample)
 
 ---
 
