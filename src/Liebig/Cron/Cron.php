@@ -40,6 +40,12 @@ class Cron {
     private static $logger;
 
     /**
+     * @static
+     * @var boolean Set to enable or disable database logging
+     */
+    private static $databaseLogging = true;
+
+    /**
      * Add a cron job
      *
      * Expression definition:
@@ -77,10 +83,10 @@ class Cron {
         if (!is_bool($isEnabled)) {
             $isEnabled = true;
         }
-        
+
         // Check if the name is unique
         foreach (self::$crons as $cron) {
-            if ($cron['name'] === $name){
+            if ($cron['name'] === $name) {
                 return false;
             }
         }
@@ -92,7 +98,7 @@ class Cron {
         array_push(self::$crons, array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
         return null;
     }
-    
+
     /**
      * Remove a cron job from execution by name
      * 
@@ -101,7 +107,7 @@ class Cron {
      * @return null|false Retun null if a cron job with the given name was found and was successfully removed or return false if no job with the given name was found
      */
     public static function remove($name) {
-    
+
         foreach (self::$crons as $cronKey => $cronValue) {
             if ($cronValue['name'] === $name) {
                 unset(self::$crons[$cronKey]);
@@ -110,7 +116,6 @@ class Cron {
         }
         return false;
     }
-    
 
     /**
      * Run the cron jobs
@@ -125,19 +130,22 @@ class Cron {
         // Get the rundate
         $runDate = new \DateTime();
 
-        // Checking the repetTime parameter
-        if(!is_int($repeatTime)) {
+        // Checking the repeatTime parameter
+        if (!is_int($repeatTime)) {
             $repeatTime = 1;
         }
 
-        // Get the time (in seconds) between this and the last run and save this to $timeBetween
-        $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
-        if (!empty($lastManager[0])) {
-            $lastRun = new \DateTime($lastManager[0]->rundate);
-            $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
-        } else {
-            // No previous cron job runs are found
-            $timeBetween = -1;
+        // Getting last run time only if database logging is enabled
+        if (self::$databaseLogging) {
+            // Get the time (in seconds) between this and the last run and save this to $timeBetween
+            $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
+            if (!empty($lastManager[0])) {
+                $lastRun = new \DateTime($lastManager[0]->rundate);
+                $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
+            } else {
+                // No previous cron job runs are found
+                $timeBetween = -1;
+            }
         }
 
         // Initialize the crons array, errors count and start the runtime calculation
@@ -174,53 +182,68 @@ class Cron {
         // Get the end runtime for all the cron jobs
         $afterAll = microtime(true);
 
-        // Create a new cronmanager database object for this run and save it
-        $cronmanager = new\Liebig\Cron\models\Manager;
-        $cronmanager->rundate = $runDate;
-        $cronmanager->runtime = $afterAll - $beforeAll;
-        $cronmanager->save();
+        // If database logging is enabled, save manager und error jobs to db
+        if (self::$databaseLogging) {
 
-        $inTime = false;
-        // Check if the run between this run and the last run is in time or not and log this event
-        if ($timeBetween === -1) {
-            self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
-            $inTime = -1;
-        } elseif (($repeatTime * 60) - $timeBetween <= -30) {
-            self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+            // Create a new cronmanager database object for this run and save it
+            $cronmanager = new\Liebig\Cron\models\Manager;
+            $cronmanager->rundate = $runDate;
+            $cronmanager->runtime = $afterAll - $beforeAll;
+            $cronmanager->save();
+
             $inTime = false;
-        } elseif (($repeatTime * 60) - $timeBetween >= 30) {
-            self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
-            $inTime = false;
-        } else {
-            self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
-            $inTime = true;
-        }
-
-        // Walk over the cron error jobs (which returned not null) and save them to the database as object
-        foreach ($cronErrors as $cronError) {
-            $errorEntry = new \Liebig\Cron\models\Error;
-            $errorEntry->name = $cronError['name'];
-
-            // Get the type of the returned value
-            $returnType = gettype($cronError['return']);
-            // If this type is a boolean, integer, double or string we can cast it to String and save it to the error database object
-            if ($returnType === 'boolean' || $returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
-                // We cut the string at 5000 characters to not carried away and to stay the database healthy
-                $errorEntry->return = substr((string) $cronError['return'], 0, 5000);
+            // Check if the run between this run and the last run is in time or not and log this event
+            if ($timeBetween === -1) {
+                self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
+                $inTime = -1;
+            } elseif (($repeatTime * 60) - $timeBetween <= -30) {
+                self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+                $inTime = false;
+            } elseif (($repeatTime * 60) - $timeBetween >= 30) {
+                self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
+                $inTime = false;
             } else {
-                $errorEntry->return = 'Return value of type ' . $returnType . ' cannot be displayed as string (type error)';
+                self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
+                $inTime = true;
             }
 
-            $errorEntry->runtime = $cronError['runtime'];
-            $errorEntry->cron_manager_id = $cronmanager->id;
-            $errorEntry->save();
-        }
+            // Walk over the cron error jobs (which returned not null) and save them to the database as object
+            foreach ($cronErrors as $cronError) {
+                $errorEntry = new \Liebig\Cron\models\Error;
+                $errorEntry->name = $cronError['name'];
 
-        // Log the result of the cron run
-        if (empty($cronErrors)) {
-            self::log('info', 'The cron run with the manager id ' . $cronmanager->id . ' was finished without errors.');
+                // Get the type of the returned value
+                $returnType = gettype($cronError['return']);
+                // If this type is a boolean, integer, double or string we can cast it to String and save it to the error database object
+                if ($returnType === 'boolean' || $returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
+                    // We cut the string at 5000 characters to not carried away and to stay the database healthy
+                    $errorEntry->return = substr((string) $cronError['return'], 0, 5000);
+                } else {
+                    $errorEntry->return = 'Return value of type ' . $returnType . ' cannot be displayed as string (type error)';
+                }
+
+                $errorEntry->runtime = $cronError['runtime'];
+                $errorEntry->cron_manager_id = $cronmanager->id;
+                $errorEntry->save();
+            }
+
+            // Log the result of the cron run
+            if (empty($cronErrors)) {
+                self::log('info', 'The cron run with the manager id ' . $cronmanager->id . ' was finished without errors.');
+            } else {
+                self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($cronErrors) . ' errors.');
+            }
+            
+        // If database logging is not enabled
         } else {
-            self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($cronErrors) . ' errors.');
+            // Cannot check if the cron run is in time
+            $inTime = -1;
+            // Log the result of the cron run wihtout the cronmanager id
+            if (empty($cronErrors)) {
+                self::log('info', 'Cron run was finished without errors.');
+            } else {
+                self::log('error', 'Cron run was finished with ' . count($cronErrors) . ' errors.');
+            }
         }
 
         // Return the cron jobs array (including rundate, runtime, errors and an other array with the cron jobs information)
@@ -291,17 +314,33 @@ class Cron {
             return false;
         }
     }
-    
+
+    /**
+     * Enable or disable database logging - default value is true
+     *
+     * @static
+     * @param  boolean $bool Set to enable or disable database logging
+     * @return null|false Retun null if value was set successfully or false if there was an problem with the parameter
+     */
+    public static function setDatabaseLogging($bool) {
+        if (is_bool($bool)) {
+            self::$databaseLogging = $bool;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Reset the Cron class
-     * Remove the cons array and the logger
+     * Remove the cons array and the logger and set databaseLogging back to true
      *
      * @static
      */
     public static function reset() {
-        
+
         self::$crons = array();
         self::$logger = null;
+        self::$databaseLogging = true;
     }
 
 }

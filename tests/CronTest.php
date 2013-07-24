@@ -83,6 +83,41 @@ class CronTest extends TestCase {
     }
 
     /**
+     * Test method for activating and deactivating database logging
+     *
+     */
+    public function testDeactivateDatabaseLogging() {
+        $i = 0;
+        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return false;
+                });
+        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return false;
+                });
+
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 2);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 1);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 2);
+
+        \Liebig\Cron\Cron::setDatabaseLogging(false);
+        
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 4);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 1);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 2);
+        
+        \Liebig\Cron\Cron::setDatabaseLogging(true);
+        
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 6);
+        $this->assertEquals(\Liebig\Cron\models\Manager::count(), 2);
+        $this->assertEquals(\Liebig\Cron\models\Error::count(), 4);
+    }
+
+    /**
      * Test method for running cron jobs
      *
      */

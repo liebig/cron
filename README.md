@@ -23,7 +23,7 @@ You don't need
 1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require": {` section (Find more about composer at http://getcomposer.org/)
 3.  Run the `composer update --no-dev` command in your shell from your `/laravel/` directory 
 4.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
-5.  Migrate the database with running the command 'php artisan migrate --package="Liebig/Cron"'
+5.  Migrate the database with running the command `php artisan migrate --package="Liebig/Cron"`
 6.  Now you can use `\Liebig\Cron\Cron` everywhere for free
 
 ---
@@ -144,6 +144,22 @@ public static function getLogger() {
 
 ---
 
+### Disable database logging
+
+By default database logging is enabled and after each cron run a manager object and error job objects will be saved to database. We strongly recommend to keep the database logging acivated because only with this option Cron can check if the current cron job run is in time. But maybe in some cases it makes sense to deactivate the database logging with the **setDatabaseLogging** method.
+
+```
+public static function setDatabaseLogging($bool) {
+```
+
+#### Example
+
+```
+\Liebig\Cron\Cron::setDatabaseLogging(false);
+```
+
+---
+
 ### Reset Cron
 
 To reset the cron management call the static **setLogger** method. It removes all added cron jobs and the Monolog logger object, if one is set.
@@ -151,8 +167,6 @@ To reset the cron management call the static **setLogger** method. It removes al
 ```
 public static function reset() {
 ```
-
----
 
 #### Example
 
