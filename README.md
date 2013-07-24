@@ -16,8 +16,20 @@ You don't need
 
 **NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
 
+- [Installation](#installation)
+- [Usage](#usage)
+- [--Add a cron job](#addjob)
+- [--Remove a cron job](#removejob)
+- [--Run the cron jobs](#runjob)
+- [--Set the Monolog logger](#setlogger)
+- [--Get the Monolog logger](#getlogger)
+- [--Disable database logging](#disabledatabaselogging)
+- [--Reset Cron](#reset)
+- [Full example](#fullexample)
+
 ---
 
+<a name="installation"></a>
 ## Installation
 
 1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require": {` section (Find more about composer at http://getcomposer.org/)
@@ -28,8 +40,10 @@ You don't need
 
 ---
 
+<a name="usage"></a>
 ## Usage
 
+<a name="addjob"></a>
 ### Add a cron job
 
 Adding a cron job to Cron is very easy by using the static **add** function. As parameter the **name** of the cron job, the cron **expression** and an anonymous **function** is needed. The boolean **isEnabled** is optional and can enable or disable this cron job execution (default is enabled).
@@ -72,6 +86,7 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
 
 ---
 
+<a name="removejob"></a>
 ### Remove a cron job
 
 To remove a set cron job on runtime use the **remove** method with the cron job name as string parameter.
@@ -92,6 +107,7 @@ public static function remove($name) {
 
 ---
 
+<a name="runjob"></a>
 ### Run the cron jobs
 
 Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
@@ -114,6 +130,7 @@ $report = \Liebig\Cron\Cron::run();
 
 ---
 
+<a name="setlogger"></a>
 ### Set the Monolog logger
 
 If logging should be activated just add a Monolog logger object to Crons static **setLogger** method. Only Monolog is supported at the moment.
@@ -134,6 +151,7 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 
 ---
 
+<a name="getlogger"></a>
 ### Get the Monolog logger
 
 To recieve the set logger object use the static **getLogger** method. If no logger object is set, null will be returned. 
@@ -144,6 +162,7 @@ public static function getLogger() {
 
 ---
 
+<a name="disabledatabaselogging"></a>
 ### Disable database logging
 
 By default database logging is enabled and after each cron run a manager object and error job objects will be saved to database. We strongly recommend to keep the database logging acivated because only with this option Cron can check if the current cron job run is in time. But maybe in some cases it makes sense to deactivate the database logging with the **setDatabaseLogging** method.
@@ -160,6 +179,7 @@ public static function setDatabaseLogging($bool) {
 
 ---
 
+<a name="reset"></a>
 ### Reset Cron
 
 To reset the cron management call the static **setLogger** method. It removes all added cron jobs and the Monolog logger object, if one is set.
@@ -183,6 +203,7 @@ public static function reset() {
 
 ---
 
+<a name="fullexample"></a>
 ## Full example
 
 First we create a route which should be called in an defined interval.
