@@ -1,7 +1,7 @@
 # ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
 Job scheduling for Laravel
 
-Cron can be used for easily manage cron jobs in laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). In this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called. And that is the Cron magic! Additionally Cron logs every run whith the run error jobs (which not returned null) for you into the database and if you whish to a Monolog logger instance. This cron package is a holistic cron manager four your Laravel website.  
+Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the error jobs (which not returned null) into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
 
 You need
 *   this package
@@ -11,7 +11,7 @@ You need
 You don't need
 *   to create Artisan commands
 *   console access to your server
-*   to run the regular cron route request on the same machine where your laravel site is located
+*   to run the regular cron route requests on the same machine where your Laravel site is located
 *   to worry about (cron) job management anymore
 
 **NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
