@@ -31,7 +31,7 @@ class Cron {
      * @static
      * @var array Saves all the cron jobs
      */
-    private static $crons = array();
+    private static $cronJobs = array();
 
     /**
      * @static
@@ -41,9 +41,15 @@ class Cron {
 
     /**
      * @static
-     * @var boolean Set to enable or disable database logging
+     * @var boolean Trigger to enable or disable database logging
      */
     private static $databaseLogging = true;
+
+    /**
+     * @static
+     * @var boolean Trigger to enable or disable logging of error jobs only to database
+     */
+    private static $logOnlyErrorJobsToDatabase = true;
 
     /**
      * Add a cron job
@@ -70,7 +76,7 @@ class Cron {
     public static function add($name, $expression, $function, $isEnabled = true) {
 
         // Check if the given expression is set and is correct
-        if (!isset($expression) || count(explode(' ', $expression)) < 5 || count(explode(' ', $expression)) > 5) {
+        if (!isset($expression) || count(explode(' ', $expression)) < 5 || count(explode(' ', $expression)) > 6) {
             return false;
         }
 
@@ -85,8 +91,8 @@ class Cron {
         }
 
         // Check if the name is unique
-        foreach (self::$crons as $cron) {
-            if ($cron['name'] === $name) {
+        foreach (self::$cronJobs as $job) {
+            if ($job['name'] === $name) {
                 return false;
             }
         }
@@ -95,7 +101,7 @@ class Cron {
         $expression = \Cron\CronExpression::factory($expression);
 
         // Add the new created cron job to the many other little cron jobs and return null because everything is fine
-        array_push(self::$crons, array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
+        array_push(self::$cronJobs, array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
         return null;
     }
 
@@ -108,9 +114,9 @@ class Cron {
      */
     public static function remove($name) {
 
-        foreach (self::$crons as $cronKey => $cronValue) {
-            if ($cronValue['name'] === $name) {
-                unset(self::$crons[$cronKey]);
+        foreach (self::$cronJobs as $jobKey => $jobValue) {
+            if ($jobValue['name'] === $name) {
+                unset(self::$cronJobs[$jobKey]);
                 return null;
             }
         }
@@ -146,24 +152,28 @@ class Cron {
                 // No previous cron job runs are found
                 $timeBetween = -1;
             }
+            // If database logging is disabled
+        } else {
+            // Cannot check if the cron run is in time
+            $inTime = -1;
         }
 
         // Initialize the crons array, errors count and start the runtime calculation
-        $cronsEvaluation = array();
-        $cronErrors = array();
+        $allJobs = array();
+        $errorJobs = array();
         $beforeAll = microtime(true);
 
-        // For all defined crons run this
-        foreach (self::$crons as $cron) {
+        // For all defined cron jobs run this
+        foreach (self::$cronJobs as $job) {
 
-            // If the cron is enabled and if the time for this job has come
-            if ($cron['enabled'] === true && $cron['expression']->isDue()) {
+            // If the job is enabled and if the time for this job has come
+            if ($job['enabled'] === true && $job['expression']->isDue()) {
 
                 // Get the start time of the job runtime
                 $beforeOne = microtime(true);
 
                 // Run the function and save the return to $return - all the magic goes here
-                $return = $cron['function']();
+                $return = $job['function']();
 
                 // Get the end time of the job runtime
                 $afterOne = microtime(true);
@@ -171,28 +181,28 @@ class Cron {
                 // If the function returned not null then we assume that there was an error
                 if ($return !== null) {
                     // Add to error array
-                    array_push($cronErrors, array('name' => $cron['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
+                    array_push($errorJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
                 }
 
-                // Push the information of the run cron job to the crons array (including name, return value, rundate, runtime)
-                array_push($cronsEvaluation, array('name' => $cron['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
+                // Push the information of the ran cron job to the allJobs array (including name, return value, runtime)
+                array_push($allJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
             }
         }
 
         // Get the end runtime for all the cron jobs
         $afterAll = microtime(true);
 
-        // If database logging is enabled, save manager und error jobs to db
+        // If database logging is enabled, save manager und jobs to db
         if (self::$databaseLogging) {
 
             // Create a new cronmanager database object for this run and save it
-            $cronmanager = new\Liebig\Cron\models\Manager;
+            $cronmanager = new\Liebig\Cron\models\Manager();
             $cronmanager->rundate = $runDate;
             $cronmanager->runtime = $afterAll - $beforeAll;
             $cronmanager->save();
 
             $inTime = false;
-            // Check if the run between this run and the last run is in time or not and log this event
+            // Check if the run between this run and the last run is in good time (30 seconds tolerance) or not and log this event
             if ($timeBetween === -1) {
                 self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
                 $inTime = -1;
@@ -207,54 +217,80 @@ class Cron {
                 $inTime = true;
             }
 
-            // Walk over the cron error jobs (which returned not null) and save them to the database as object
-            foreach ($cronErrors as $cronError) {
-                $errorEntry = new \Liebig\Cron\models\Error;
-                $errorEntry->name = $cronError['name'];
-
-                // Get the type of the returned value
-                $returnType = gettype($cronError['return']);
-                // If this type is a boolean, integer, double or string we can cast it to String and save it to the error database object
-                if ($returnType === 'boolean' || $returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
-                    // We cut the string at 5000 characters to not carried away and to stay the database healthy
-                    $errorEntry->return = substr((string) $cronError['return'], 0, 5000);
-                } else {
-                    $errorEntry->return = 'Return value of type ' . $returnType . ' cannot be displayed as string (type error)';
-                }
-
-                $errorEntry->runtime = $cronError['runtime'];
-                $errorEntry->cron_manager_id = $cronmanager->id;
-                $errorEntry->save();
+            if (self::$logOnlyErrorJobsToDatabase) {
+                // Save error jobs only to database
+                self::saveJobsFromArrayToDatabase($errorJobs, $cronmanager->id);
+            } else {
+                // Save all jobs to database
+                self::saveJobsFromArrayToDatabase($allJobs, $cronmanager->id);
             }
 
             // Log the result of the cron run
-            if (empty($cronErrors)) {
+            if (empty($errorJobs)) {
                 self::log('info', 'The cron run with the manager id ' . $cronmanager->id . ' was finished without errors.');
             } else {
-                self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($cronErrors) . ' errors.');
+                self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($errorJobs) . ' errors.');
             }
-            
-        // If database logging is not enabled
+
+            // If database logging is disabled
         } else {
-            // Cannot check if the cron run is in time
-            $inTime = -1;
-            // Log the result of the cron run wihtout the cronmanager id
-            if (empty($cronErrors)) {
+            // Log the status of the cron job run wihtout the cronmanager id
+            if (empty($errorJobs)) {
                 self::log('info', 'Cron run was finished without errors.');
             } else {
-                self::log('error', 'Cron run was finished with ' . count($cronErrors) . ' errors.');
+                self::log('error', 'Cron run was finished with ' . count($errorJobs) . ' errors.');
             }
         }
 
-        // Return the cron jobs array (including rundate, runtime, errors and an other array with the cron jobs information)
-        return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($cronErrors), 'crons' => $cronsEvaluation);
+        // Return the cron jobs array (including rundate, runtime, errors and an array with the cron jobs reports)
+        return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
+    }
+
+    /**
+     * Save cron jobs from an array to the database
+     *
+     * @static
+     * @param  array $jobArray This array holds all the ran cron jobs which should be logged to database - entry structure must be job['name'], job['return'], job['runtime']
+     * @param  int $managerId The id of the saved manager database object which cares about the jobs
+     */
+    private static function saveJobsFromArrayToDatabase($jobArray, $managerId) {
+
+        foreach ($jobArray as $job) {
+            $jobEntry = new \Liebig\Cron\models\Job();
+            $jobEntry->name = $job['name'];
+
+            // Get the type of the returned value
+            $returnType = gettype($job['return']);
+
+            // If the type is NULL there was no error running this job - insert empty string
+            if ($returnType === 'NULL') {
+                $jobEntry->return = '';
+            // If the tyoe is boolean save the value as string
+            } else if ($returnType === 'boolean') {
+                if($job['return']) {
+                    $jobEntry->return = 'true';
+                } else {
+                    $jobEntry->return = 'false';
+                }
+            // If the type is integer, double or string we can cast it to String and save it to the error database object
+            } else if ($returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
+                // We cut the string at 500 characters to not carry away and to stay the database healthy
+                $jobEntry->return = substr((string) $job['return'], 0, 500);
+            } else {
+                $jobEntry->return = 'Return value of type ' . $returnType . ' cannot be displayed as string (type error)';
+            }
+
+            $jobEntry->runtime = $job['runtime'];
+            $jobEntry->cron_manager_id = $managerId;
+            $jobEntry->save();
+        }
     }
 
     /**
      * Add a Monolog logger object and activate logging - if no parameter is given, the logger will be removed and cron logging is disabled
      *
      * @static
-     * @param  \Monolog\Logger $logger optional The Monolog logger object which will be used for cron logging - if no parameter is given the logger will be removed
+     * @param  \Monolog\Logger $logger optional The Monolog logger object which will be used for cron logging - if this parameter is null the logger will be removed
      */
     public static function setLogger(\Monolog\Logger $logger = null) {
         self::$logger = $logger;
@@ -276,6 +312,7 @@ class Cron {
      * @static
      * @param  string $level The logger level as string which can be debug, info, notice, warning, error, critival, alert, emergency
      * @param  string $message The message which will be logged to Monolog
+     * @return null|false Retun false if there was an error or null if logging is enabled and the message was given to the Monolog logger object
      */
     private static function log($level, $message) {
 
@@ -316,7 +353,7 @@ class Cron {
     }
 
     /**
-     * Enable or disable database logging - default value is true
+     * Enable or disable database logging - start value is true
      *
      * @static
      * @param  boolean $bool Set to enable or disable database logging
@@ -331,16 +368,33 @@ class Cron {
     }
 
     /**
+     * Enable or disable logging error jobs to database only, not all jobs - start value is true
+     * NOTE: Works only if database logging is enabled
+     *
+     * @static
+     * @param  boolean $bool Set to enable or disable logging only error jobs
+     * @return null|false Retun null if value was set successfully or false if there was an problem with the parameter
+     */
+    public static function setLogOnlyErrorJobsToDatabase($bool) {
+        if (is_bool($bool)) {
+            self::$logOnlyErrorJobsToDatabase = $bool;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Reset the Cron class
-     * Remove the cons array and the logger and set databaseLogging back to true
+     * Remove the cons array and the logger and set databaseLogging and logOnlyErrorJobsToDatabase back to true
      *
      * @static
      */
     public static function reset() {
 
-        self::$crons = array();
+        self::$cronJobs = array();
         self::$logger = null;
         self::$databaseLogging = true;
+        self::$logOnlyErrorJobsToDatabase = true;
     }
 
 }
