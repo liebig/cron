@@ -1,7 +1,7 @@
 # ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
 Job scheduling for Laravel
 
-Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the error jobs (which not returned null) into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
+Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the jobs into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
 
 
 - [Overview](#overview)
@@ -44,6 +44,8 @@ You don't need
 4.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
 5.  Migrate the database with running the command `php artisan migrate --package="Liebig/Cron"`
 6.  Now you can use `\Liebig\Cron\Cron` everywhere for free
+
+**NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you need to migrate the new schema (`php artisan migrate:refresh`) or rename the database table cron_error to cron_job. You don't need this step if you disable database logging in general.
 
 ---
 
