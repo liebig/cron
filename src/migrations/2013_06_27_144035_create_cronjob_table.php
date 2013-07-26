@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCronerrorTable extends Migration {
+class CreateCronjobTable extends Migration {
 
     /**
      * Run the migrations.
@@ -10,7 +10,7 @@ class CreateCronerrorTable extends Migration {
      * @return void
      */
     public function up() {
-        Schema::create('cron_error', function($table) {
+        Schema::create('cron_job', function($table) {
                     $table->increments('id');
                     $table->string('name');
                     $table->text('return');
@@ -26,7 +26,7 @@ class CreateCronerrorTable extends Migration {
      * @return void
      */
     public function down() {
-        Schema::drop('cron_error');
+        Schema::drop('cron_job');
     }
 
 }

@@ -2,9 +2,9 @@
 
 namespace Liebig\Cron\models;
 
-class Error extends \Eloquent{
+class Job extends \Eloquent{
     
-    protected $table = 'cron_error';
+    protected $table = 'cron_job';
     protected $fillable = array('name', 'return', 'runtime');
     
     public function manager() {

@@ -5,10 +5,10 @@ namespace Liebig\Cron\models;
 class Manager extends \Eloquent{
     
     protected $table = 'cron_manager';
-    protected $fillable = array('rundate', 'runtime', 'errors');
+    protected $fillable = array('rundate', 'runtime');
     
-    public function cronErrors() {
-        return $this->hasMany('\Liebig\Cron\models\Error', 'cron_manager_id');
+    public function cronJobs() {
+        return $this->hasMany('\Liebig\Cron\models\Job', 'cron_manager_id');
     }
     
     
