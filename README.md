@@ -1,7 +1,7 @@
 # ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
 Job scheduling for Laravel
 
-Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the jobs into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
+Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the error jobs into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
 
 
 - [Overview](#overview)
@@ -10,9 +10,9 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [--Add a cron job](#addjob)
 - [--Remove a cron job](#removejob)
 - [--Run the cron jobs](#runjob)
-- [--Set the Monolog logger](#setlogger)
-- [--Get the Monolog logger](#getlogger)
+- [--Set a Monolog logger](#setlogger)
 - [--Disable database logging](#disabledatabaselogging)
+- [--Log only error jobs to database](#logonlyerrorjobstodatabase)
 - [--Reset Cron](#reset)
 - [Full example](#fullexample)
 
@@ -23,7 +23,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 
 You need
 *   this package
-*   to define a route with all cron job definations and closing with the run() method call
+*   to define a route with all cron job definations and closing with the `run()` method call
 *   a server or service which call the defined cron route every defined number of minutes (default is every minute) as normal web request (e.g. with wget)
 
 You don't need
@@ -76,7 +76,7 @@ The **expression** is a string of five or optional six subexpressions that descr
     +------------------------- min (0 - 59)
 ```
 
-The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in success case or anything else in if there was an error while executing this job. The error case will be logged to database and to a Monolog logger object (if logger is enabled). 
+The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in success case or anything else in if there was an error while executing this job. By default, the error case will be logged to database and to a Monolog logger object (if logger is enabled). 
 
 The **isEnabled** boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easy by giving a true boolean to the method. This parameter is optional and the default falue is enabled.
 
@@ -119,13 +119,13 @@ public static function remove($name) {
 <a name="runjob"></a>
 ### Run the cron jobs
 
-Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed Cron report. Additionally the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
+Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed report. By default the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
 
 ```
 public static function run($repeatTime = 1) {
 ```
 
-The optinal **repeatTime** parameter define the time in minutes between two run method calls. In other words, the time between the cron job route will be called. If you call this route every minute (* * * * *) you do not need to define this parameter. But some cron servcie provider only support calls only every 15 or even 30 minutes. In this case you have to set this parameter to 15 or 30. This parameter is only important to determine if the current run call is in time.
+The optinal **repeatTime** parameter define the time in minutes between two run method calls. In other words, the time between the cron job route will be called. If you call this route every minute (* * * * *) you do not need to define this parameter. But some cron service provider only support calls every 15 or even 30 minutes. In this case you have to set this parameter to 15 or 30. This parameter is only important to determine if the current run call is in time.
 
 **NOTE**: If the route call is not every minute, you have to adjust your cron job expressions to fit with this interval.
 
@@ -140,7 +140,7 @@ $report = \Liebig\Cron\Cron::run();
 ---
 
 <a name="setlogger"></a>
-### Set the Monolog logger
+### Set a Monolog logger
 
 If logging should be activated just add a Monolog logger object to Crons static **setLogger** method. Only Monolog is supported at the moment.
 
@@ -155,26 +155,19 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 ```
 \Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
 // And remove the logger again
-// \Liebig\Cron\Cron::setLogger();
+\Liebig\Cron\Cron::setLogger();
 ```
 
----
+#### Getter
 
-<a name="getlogger"></a>
-### Get the Monolog logger
-
-To recieve the set logger object use the static **getLogger** method. If no logger object is set, null will be returned. 
-
-```
-public static function getLogger() {
-```
+To recieve the set logger object use the static `getLogger()` method. If no logger object is set, null will be returned. 
 
 ---
 
 <a name="disabledatabaselogging"></a>
 ### Disable database logging
 
-By default database logging is enabled and after each cron run a manager object and error job objects will be saved to database. We strongly recommend to keep the database logging acivated because only with this option Cron can check if the current cron job run is in time. But maybe in some cases it makes sense to deactivate the database logging with the **setDatabaseLogging** method.
+By default database logging is enabled and after each cron run a manager object and job objects will be saved to database. We strongly recommend to keep the database logging acivated because only with this option Cron can check if the current run is in time. But maybe in some cases it makes sense to deactivate the database logging with the **setDatabaseLogging** method.
 
 ```
 public static function setDatabaseLogging($bool) {
@@ -186,12 +179,38 @@ public static function setDatabaseLogging($bool) {
 \Liebig\Cron\Cron::setDatabaseLogging(false);
 ```
 
+#### Getter
+
+To receive the current boolean value of the logging to database variable, just use the static `isDatabaseLogging()` function.
+
+---
+
+<a name="logonlyerrorjobstodatabase"></a>
+### Log only error jobs to database
+
+By default Cron will only log error jobs (which not return null) to database. Maybe you want to log all run jobs to database by using the static **setLogOnlyErrorJobsToDatabase** function. 
+
+```
+public static function setLogOnlyErrorJobsToDatabase($bool) {
+```
+
+#### Example
+
+```
+// Log all jobs (not only the error jobs) to database
+\Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
+```
+
+#### Getter
+
+To receive the current boolean value of the logging only error jobs to database variable, just use the static `isLogOnlyErrorJobsToDatabase()` function.
+
 ---
 
 <a name="reset"></a>
 ### Reset Cron
 
-To reset the cron management call the static **setLogger** method. It removes all added cron jobs and the Monolog logger object, if one is set.
+To reset the cron management, call the static **reset** method. It will reset all variables to the default values.
 
 ```
 public static function reset() {
@@ -205,9 +224,13 @@ public static function reset() {
                     return null;
                 });
 \Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
+\Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
+\Liebig\Cron\Cron::setDatabaseLogging(false);
 \Liebig\Cron\Cron::reset();
 // \Liebig\Cron\Cron::getLogger() === NULL
 // \Liebig\Cron\Cron::remove('example1') === false
+// \Liebig\Cron\Cron::isLogOnlyErrorJobsToDatabase() === true
+// \Liebig\Cron\Cron::isDatabaseLogging() === true
 ```
 
 ---
@@ -217,7 +240,7 @@ public static function reset() {
 
 First we create a route which should be called in an defined interval.
 
-**NOTE**: We have to protect this route because if someone call this uncontrolled our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.
+**NOTE**: We have to protect this route because if someone call this uncontrolled, our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.
 
 ```
 Route::get('/Cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
