@@ -47,7 +47,7 @@ class Cron {
 
     /**
      * @static
-     * @var boolean Trigger to enable or disable logging of error jobs only to database
+     * @var boolean Trigger to enable or disable logging error jobs only to database
      */
     private static $logOnlyErrorJobsToDatabase = true;
 
@@ -71,7 +71,7 @@ class Cron {
      * @param  string $expression The cron job expression (e.g. for every minute: '* * * * *')
      * @param  function $function The anonymous function which will be executed
      * @param  boolean $isEnabled optional If the cron job is enabled or not - the standard configuration is true
-     * @return boolean Return true if everything worked and false if there is any error
+     * @return void|false Return void if everything worked and false if there is any error
      */
     public static function add($name, $expression, $function, $isEnabled = true) {
 
@@ -102,7 +102,6 @@ class Cron {
 
         // Add the new created cron job to the many other little cron jobs and return null because everything is fine
         array_push(self::$cronJobs, array('name' => $name, 'expression' => $expression, 'enabled' => $isEnabled, 'function' => $function));
-        return null;
     }
 
     /**
@@ -110,7 +109,7 @@ class Cron {
      * 
      * @static
      * @param string $name The name of the cron job which should be removed from execution
-     * @return null|false Retun null if a cron job with the given name was found and was successfully removed or return false if no job with the given name was found
+     * @return void|false Retun null if a cron job with the given name was found and was successfully removed or return false if no job with the given name was found
      */
     public static function remove($name) {
 
@@ -130,7 +129,7 @@ class Cron {
      * 
      * @static
      * @param  int $repeatTime optional The time in minutes between two run method calls (default is every minute - * * * * *)
-     * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return values, rundate and runtime)
+     * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return value, rundate and runtime)
      */
     public static function run($repeatTime = 1) {
         // Get the rundate
@@ -152,13 +151,13 @@ class Cron {
                 // No previous cron job runs are found
                 $timeBetween = -1;
             }
-            // If database logging is disabled
+        // If database logging is disabled
         } else {
             // Cannot check if the cron run is in time
             $inTime = -1;
         }
 
-        // Initialize the crons array, errors count and start the runtime calculation
+        // Initialize the job and job error array and start the runtime calculation
         $allJobs = array();
         $errorJobs = array();
         $beforeAll = microtime(true);
@@ -232,9 +231,9 @@ class Cron {
                 self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($errorJobs) . ' errors.');
             }
 
-            // If database logging is disabled
+        // If database logging is disabled
         } else {
-            // Log the status of the cron job run wihtout the cronmanager id
+            // Log the status of the cron job run without the cronmanager id
             if (empty($errorJobs)) {
                 self::log('info', 'Cron run was finished without errors.');
             } else {
@@ -242,7 +241,7 @@ class Cron {
             }
         }
 
-        // Return the cron jobs array (including rundate, runtime, errors and an array with the cron jobs reports)
+        // Return the cron jobs array (including rundate, in time boolean, runtime, number of errors and an array with the cron jobs reports)
         return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
     }
 
@@ -274,10 +273,10 @@ class Cron {
                 }
             // If the type is integer, double or string we can cast it to String and save it to the error database object
             } else if ($returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
-                // We cut the string at 500 characters to not carry away and to stay the database healthy
+                // We cut the string at 500 characters to not overcharge the database
                 $jobEntry->return = substr((string) $job['return'], 0, 500);
             } else {
-                $jobEntry->return = 'Return value of type ' . $returnType . ' cannot be displayed as string (type error)';
+                $jobEntry->return = 'Return value of job ' . $job['name'] . ' has the type ' . $returnType . ' - this type cannot be displayed as string (type error)';
             }
 
             $jobEntry->runtime = $job['runtime'];
@@ -287,7 +286,7 @@ class Cron {
     }
 
     /**
-     * Add a Monolog logger object and activate logging - if no parameter is given, the logger will be removed and cron logging is disabled
+     * Add a Monolog logger object and activate logging
      *
      * @static
      * @param  \Monolog\Logger $logger optional The Monolog logger object which will be used for cron logging - if this parameter is null the logger will be removed
@@ -312,7 +311,7 @@ class Cron {
      * @static
      * @param  string $level The logger level as string which can be debug, info, notice, warning, error, critival, alert, emergency
      * @param  string $message The message which will be logged to Monolog
-     * @return null|false Retun false if there was an error or null if logging is enabled and the message was given to the Monolog logger object
+     * @return void|false Retun false if there was an error or void if logging is enabled and the message was given to the Monolog logger object
      */
     private static function log($level, $message) {
 
@@ -357,7 +356,7 @@ class Cron {
      *
      * @static
      * @param  boolean $bool Set to enable or disable database logging
-     * @return null|false Retun null if value was set successfully or false if there was an problem with the parameter
+     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
      */
     public static function setDatabaseLogging($bool) {
         if (is_bool($bool)) {
@@ -366,14 +365,23 @@ class Cron {
             return false;
         }
     }
+    
+    /**
+     * Is logging to database true or false
+     * 
+     * @return boolean Return boolean which indicates if database logging is true or false
+     */
+    public static function isDatabaseLogging() {
+        return self::$databaseLogging;
+    }
 
     /**
-     * Enable or disable logging error jobs to database only, not all jobs - start value is true
+     * Enable or disable logging error jobs to database only - start value is true
      * NOTE: Works only if database logging is enabled
      *
      * @static
-     * @param  boolean $bool Set to enable or disable logging only error jobs
-     * @return null|false Retun null if value was set successfully or false if there was an problem with the parameter
+     * @param  boolean $bool Set to enable or disable logging error jobs only
+     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
      */
     public static function setLogOnlyErrorJobsToDatabase($bool) {
         if (is_bool($bool)) {
@@ -381,6 +389,15 @@ class Cron {
         } else {
             return false;
         }
+    }
+    
+    /**
+     * Is logging jobs to database only true or false
+     * 
+     * @return boolean Return boolean which indicates if logging only error jobs to database is true or false
+     */
+    public static function isLogOnlyErrorJobsToDatabase() {
+        return self::$logOnlyErrorJobsToDatabase;
     }
 
     /**
