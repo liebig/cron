@@ -32,6 +32,8 @@ class CronTest extends TestCase {
         // Refresh the application and reset Cron
         $this->refreshApplication();
         \Liebig\Cron\Cron::reset();
+        // Set the default configuration values to the Laravel \Config object
+        $this->setDefaultConfigValues();
 
         // Migrate all database tables
         \Artisan::call('migrate', array('--package' => 'Liebig/Cron'));
@@ -50,6 +52,12 @@ class CronTest extends TestCase {
         $logger = new \Monolog\Logger('test');
         $logger->pushHandler(new \Monolog\Handler\StreamHandler($this->pathToLogfile, \Monolog\Logger::DEBUG));
         return $logger;
+    }
+    
+    private function setDefaultConfigValues() {
+        \Config::set('cron::runInterval', 1);
+        \Config::set('cron::databaseLogging', true);
+        \Config::set('cron::logOnlyErrorJobsToDatabase', true);
     }
 
     /**
@@ -242,10 +250,10 @@ class CronTest extends TestCase {
     }
 
     /**
-     * Test method for running cron jobs
+     * Test method for running cron jobs in the right time
      *
      */
-    public function testRun() {
+    public function testRunWithTime() {
         $i = 0;
         \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
@@ -286,6 +294,12 @@ class CronTest extends TestCase {
         $runResult5 = \Liebig\Cron\Cron::run();
         $this->assertEquals($i, 5);
         $this->assertEquals(false, $runResult5['inTime']);
+        
+        \Liebig\Cron\Cron::setRunInterval(2);
+        sleep(120);
+        $runResult6 = \Liebig\Cron\Cron::run();
+        $this->assertEquals($i, 6);
+        $this->assertEquals(true, $runResult6['inTime']);
     }
 
     /**
@@ -582,18 +596,15 @@ class CronTest extends TestCase {
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
         \Liebig\Cron\Cron::setLogger($this->returnLogger());
-        \Liebig\Cron\Cron::setDatabaseLogging(false);
-        \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
 
         \Liebig\Cron\Cron::reset();
 
         \Liebig\Cron\Cron::run();
+        
         $this->assertEquals(2, $i);
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
         $this->assertEquals(null, \Liebig\Cron\Cron::getLogger());
-        $this->assertEquals(true, \Liebig\Cron\Cron::isDatabaseLogging());
-        $this->assertEquals(true, \Liebig\Cron\Cron::isLogOnlyErrorJobsToDatabase());
     }
 
 }

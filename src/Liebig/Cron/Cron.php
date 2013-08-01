@@ -40,18 +40,6 @@ class Cron {
     private static $logger;
 
     /**
-     * @static
-     * @var boolean Trigger to enable or disable database logging
-     */
-    private static $databaseLogging = true;
-
-    /**
-     * @static
-     * @var boolean Trigger to enable or disable logging error jobs only to database
-     */
-    private static $logOnlyErrorJobsToDatabase = true;
-
-    /**
      * Add a cron job
      *
      * Expression definition:
@@ -128,20 +116,17 @@ class Cron {
      * This method (route) should be called automatically by a server or service
      * 
      * @static
-     * @param  int $repeatTime optional The time in minutes between two run method calls (default is every minute - * * * * *)
      * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return value, rundate and runtime)
      */
-    public static function run($repeatTime = 1) {
+    public static function run() {
         // Get the rundate
         $runDate = new \DateTime();
 
-        // Checking the repeatTime parameter
-        if (!is_int($repeatTime)) {
-            $repeatTime = 1;
-        }
+        // Get the run interval from Laravel config
+        $runInterval = self::getRunInterval();
 
         // Getting last run time only if database logging is enabled
-        if (self::$databaseLogging) {
+        if (self::isDatabaseLogging()) {
             // Get the time (in seconds) between this and the last run and save this to $timeBetween
             $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
             if (!empty($lastManager[0])) {
@@ -192,7 +177,7 @@ class Cron {
         $afterAll = microtime(true);
 
         // If database logging is enabled, save manager und jobs to db
-        if (self::$databaseLogging) {
+        if (self::isDatabaseLogging()) {
 
             // Create a new cronmanager database object for this run and save it
             $cronmanager = new\Liebig\Cron\models\Manager();
@@ -205,10 +190,10 @@ class Cron {
             if ($timeBetween === -1) {
                 self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
                 $inTime = -1;
-            } elseif (($repeatTime * 60) - $timeBetween <= -30) {
+            } elseif (($runInterval * 60) - $timeBetween <= -30) {
                 self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
                 $inTime = false;
-            } elseif (($repeatTime * 60) - $timeBetween >= 30) {
+            } elseif (($runInterval * 60) - $timeBetween >= 30) {
                 self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
                 $inTime = false;
             } else {
@@ -216,7 +201,7 @@ class Cron {
                 $inTime = true;
             }
 
-            if (self::$logOnlyErrorJobsToDatabase) {
+            if (self::isLogOnlyErrorJobsToDatabase()) {
                 // Save error jobs only to database
                 self::saveJobsFromArrayToDatabase($errorJobs, $cronmanager->id);
             } else {
@@ -360,7 +345,7 @@ class Cron {
      */
     public static function setDatabaseLogging($bool) {
         if (is_bool($bool)) {
-            self::$databaseLogging = $bool;
+            \Config::set('cron::databaseLogging', $bool);
         } else {
             return false;
         }
@@ -372,7 +357,12 @@ class Cron {
      * @return boolean Return boolean which indicates if database logging is true or false
      */
     public static function isDatabaseLogging() {
-        return self::$databaseLogging;
+        $databaseLogging = \Config::get('cron::databaseLogging');
+        if(is_bool($databaseLogging)) {
+            return $databaseLogging;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -385,7 +375,7 @@ class Cron {
      */
     public static function setLogOnlyErrorJobsToDatabase($bool) {
         if (is_bool($bool)) {
-            self::$logOnlyErrorJobsToDatabase = $bool;
+            \Config::set('cron::logOnlyErrorJobsToDatabase', $bool);
         } else {
             return false;
         }
@@ -397,21 +387,52 @@ class Cron {
      * @return boolean Return boolean which indicates if logging only error jobs to database is true or false
      */
     public static function isLogOnlyErrorJobsToDatabase() {
-        return self::$logOnlyErrorJobsToDatabase;
+        $logOnlyErrorJobsToDatabase = \Config::get('cron::logOnlyErrorJobsToDatabase');
+        if(is_bool($logOnlyErrorJobsToDatabase)) {
+            return $logOnlyErrorJobsToDatabase;
+        } else {
+            return null;
+        }
     }
 
     /**
      * Reset the Cron class
-     * Remove the cons array and the logger and set databaseLogging and logOnlyErrorJobsToDatabase back to true
+     * Remove the cons array and the logger object
      *
      * @static
      */
     public static function reset() {
-
         self::$cronJobs = array();
         self::$logger = null;
-        self::$databaseLogging = true;
-        self::$logOnlyErrorJobsToDatabase = true;
+    }
+    
+    /**
+     * Set the run interval - the run interval is the time between two cron job route calls
+     *
+     * @static
+     * @param  int $minutes Set the interval in minutes
+     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
+     */
+    public static function setRunInterval($minutes) {
+        if(is_int($minutes)) {
+            \Config::set('cron::runInterval', $minutes);
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * Get the current run interval value
+     * 
+     * @return int|null Return the current interval value in minutes or null if there was no value set or the value type is not equals integer
+     */
+    public static function getRunInterval() {
+        $interval = \Config::get('cron::runInterval');
+        if(is_int($interval)) {
+            return $interval;
+        } else {
+            return null;
+        }
     }
 
 }

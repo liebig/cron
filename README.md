@@ -119,23 +119,44 @@ public static function remove($name) {
 <a name="runjob"></a>
 ### Run the cron jobs
 
-Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed report. By default the report (with their cron jobs errors) will be logged to database. You have the control over your jobs.
+Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed report. By default Cron reckons that you call this method every minute (* * * * *) and by default the report (with their cron jobs errors) will be logged to database. You can change this interval using the `setRunInterval` function.
 
 ```
-public static function run($repeatTime = 1) {
+public static function run() {
 ```
-
-The optinal **repeatTime** parameter define the time in minutes between two run method calls. In other words, the time between the cron job route will be called. If you call this route every minute (* * * * *) you do not need to define this parameter. But some cron service provider only support calls every 15 or even 30 minutes. In this case you have to set this parameter to 15 or 30. This parameter is only important to determine if the current run call is in time.
-
-**NOTE**: If the route call is not every minute, you have to adjust your cron job expressions to fit with this interval.
 
 #### Example
 
 ```
 $report = \Liebig\Cron\Cron::run();
-// And for a interval of 15 minutes
-// $report = \Liebig\Cron\Cron::run(15);
 ```
+
+**NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval and database loging and the other function calls.
+
+---
+
+### Set the run interval
+
+The run interval is the time between two cron job route calls. Some cron service provider only support calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this value.
+
+```
+public static function setRunInterval($minutes) {
+```
+
+**NOTE**: If the route call interval is not every minute, you have to adjust your cron job expressions to fit with this interval.
+
+#### Example
+
+```
+// Set the run intervall to 15 minutes
+\Liebig\Cron\Cron::setRunInterval(15);
+// Or set the run intervall to 30 minutes
+\Liebig\Cron\Cron::setRunInterval(30);
+```
+
+#### Getter
+
+To recieve the current set run interval use the static `getRunInterval()` method.
 
 ---
 
@@ -260,7 +281,7 @@ Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
                         // Do some crazy things every two minutes
                         return null;
                     });
-    $report = \Liebig\Cron\Cron::run(1);
+    $report = \Liebig\Cron\Cron::run();
     print_r ($report);
 });
 ```
