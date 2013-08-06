@@ -14,6 +14,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [--Disable database logging](#disabledatabaselogging)
 - [--Log only error jobs to database](#logonlyerrorjobstodatabase)
 - [--Reset Cron](#reset)
+- [--Changing default values](#defaultvalues)
 - [Full example](#fullexample)
 
 ---
@@ -137,7 +138,7 @@ $report = \Liebig\Cron\Cron::run();
 
 ### Set the run interval
 
-The run interval is the time between two cron job route calls. Some cron service provider only support calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this value.
+The run interval is the time between two cron job route calls. Some cron service provider only support calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.
 
 ```
 public static function setRunInterval($minutes) {
@@ -253,6 +254,21 @@ public static function reset() {
 // \Liebig\Cron\Cron::isLogOnlyErrorJobsToDatabase() === true
 // \Liebig\Cron\Cron::isDatabaseLogging() === true
 ```
+
+---
+
+<a name="defaultvalues"></a>
+### Changing default values
+
+Cron ist designed to work out of the box without configuration. To enable this behaviour a few default values are set. To change Crons default settings there are two possibilities.
+
+#### Set methods
+
+You can use the Crons set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This change is temporary and the set methods must be called every time before running the **run** method. 
+
+#### Config file
+
+The behaviour values will be loaded from a Cron config file. You can change this values easy by editing the `src/config/config.php` file. This is the more permanent way. If you only want to change settings for one run, we recommend to use the setter methods.
 
 ---
 
