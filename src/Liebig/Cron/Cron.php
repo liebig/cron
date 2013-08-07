@@ -128,7 +128,7 @@ class Cron {
         // Getting last run time only if database logging is enabled
         if (self::isDatabaseLogging()) {
             // Get the time (in seconds) between this and the last run and save this to $timeBetween
-            $lastManager = \Liebig\Cron\models\Manager::orderBy('created_at', 'DESC')->take(1)->get();
+            $lastManager = \Liebig\Cron\models\Manager::orderBy('rundate', 'DESC')->take(1)->get();
             if (!empty($lastManager[0])) {
                 $lastRun = new \DateTime($lastManager[0]->rundate);
                 $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
@@ -136,7 +136,7 @@ class Cron {
                 // No previous cron job runs are found
                 $timeBetween = -1;
             }
-        // If database logging is disabled
+            // If database logging is disabled
         } else {
             // Cannot check if the cron run is in time
             $inTime = -1;
@@ -184,7 +184,7 @@ class Cron {
             $cronmanager->rundate = $runDate;
             $cronmanager->runtime = $afterAll - $beforeAll;
             $cronmanager->save();
-
+            
             $inTime = false;
             // Check if the run between this run and the last run is in good time (30 seconds tolerance) or not and log this event
             if ($timeBetween === -1) {
@@ -216,7 +216,7 @@ class Cron {
                 self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($errorJobs) . ' errors.');
             }
 
-        // If database logging is disabled
+            // If database logging is disabled
         } else {
             // Log the status of the cron job run without the cronmanager id
             if (empty($errorJobs)) {
@@ -225,6 +225,9 @@ class Cron {
                 self::log('error', 'Cron run was finished with ' . count($errorJobs) . ' errors.');
             }
         }
+        
+        // Check for old database entires and delete them
+        self::deleteOldDatabaseEntries();
 
         // Return the cron jobs array (including rundate, in time boolean, runtime, number of errors and an array with the cron jobs reports)
         return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
@@ -249,14 +252,14 @@ class Cron {
             // If the type is NULL there was no error running this job - insert empty string
             if ($returnType === 'NULL') {
                 $jobEntry->return = '';
-            // If the tyoe is boolean save the value as string
+                // If the tyoe is boolean save the value as string
             } else if ($returnType === 'boolean') {
-                if($job['return']) {
+                if ($job['return']) {
                     $jobEntry->return = 'true';
                 } else {
                     $jobEntry->return = 'false';
                 }
-            // If the type is integer, double or string we can cast it to String and save it to the error database object
+                // If the type is integer, double or string we can cast it to String and save it to the error database object
             } else if ($returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
                 // We cut the string at 500 characters to not overcharge the database
                 $jobEntry->return = substr((string) $job['return'], 0, 500);
@@ -350,7 +353,7 @@ class Cron {
             return false;
         }
     }
-    
+
     /**
      * Is logging to database true or false
      * 
@@ -358,7 +361,7 @@ class Cron {
      */
     public static function isDatabaseLogging() {
         $databaseLogging = \Config::get('cron::databaseLogging');
-        if(is_bool($databaseLogging)) {
+        if (is_bool($databaseLogging)) {
             return $databaseLogging;
         } else {
             return null;
@@ -380,7 +383,7 @@ class Cron {
             return false;
         }
     }
-    
+
     /**
      * Is logging jobs to database only true or false
      * 
@@ -388,7 +391,7 @@ class Cron {
      */
     public static function isLogOnlyErrorJobsToDatabase() {
         $logOnlyErrorJobsToDatabase = \Config::get('cron::logOnlyErrorJobsToDatabase');
-        if(is_bool($logOnlyErrorJobsToDatabase)) {
+        if (is_bool($logOnlyErrorJobsToDatabase)) {
             return $logOnlyErrorJobsToDatabase;
         } else {
             return null;
@@ -405,7 +408,7 @@ class Cron {
         self::$cronJobs = array();
         self::$logger = null;
     }
-    
+
     /**
      * Set the run interval - the run interval is the time between two cron job route calls
      *
@@ -414,13 +417,13 @@ class Cron {
      * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
      */
     public static function setRunInterval($minutes) {
-        if(is_int($minutes)) {
+        if (is_int($minutes)) {
             \Config::set('cron::runInterval', $minutes);
         } else {
             return false;
         }
     }
-    
+
     /**
      * Get the current run interval value
      * 
@@ -428,11 +431,80 @@ class Cron {
      */
     public static function getRunInterval() {
         $interval = \Config::get('cron::runInterval');
-        if(is_int($interval)) {
+        if (is_int($interval)) {
             return $interval;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Set the delete time of old database entries in hours 
+     *
+     * @static
+     * @param  int $hours Set the delete time in hours
+     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
+     */
+    public static function setDeleteDatabaseEntriesAfter($hours) {
+        if (is_int($hours)) {
+            \Config::set('cron::deleteDatabaseEntriesAfter', $hours);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Get the current delete time value in hours for old database entries
+     * 
+     * @return int|null Return the current delete time value in hours or null if there was no value set or the value type is not equals integer
+     */
+    public static function getDeleteDatabaseEntriesAfter() {
+        $deleteDatabaseEntriesAfter = \Config::get('cron::deleteDatabaseEntriesAfter');
+        if (is_int($deleteDatabaseEntriesAfter)) {
+            return $deleteDatabaseEntriesAfter;
+        } else {
+            return null;
+        }
+    }
+
+     /**
+     * Delete old manager and job entries
+     *
+     * @static
+     * @return void|false Retun false if the database was not cleaned successfully or void if the database is cleaned of old enrties
+     */
+    private static function deleteOldDatabaseEntries() {
+        // Get the delete after hours value
+        $deleteDatabaseEntriesAfter = self::getDeleteDatabaseEntriesAfter();
+        // If the value is not set or equals 0 delete old database entries is disabled
+        if (!empty($deleteDatabaseEntriesAfter)) {
+
+            // Get the current time and subtract the hour values
+            $now = new \DateTime();
+            date_sub($now, date_interval_create_from_date_string($deleteDatabaseEntriesAfter . ' hours'));
+
+            // Get the old manager entries which are expired
+            $oldManagers = \Liebig\Cron\models\Manager::where('rundate', '<=', $now->format('Y-m-d H:i:s'))->get();
+            
+            foreach ($oldManagers as $manager) {
+
+                // Get the old job entries from thee expired manager
+                $oldJobs = $manager->cronJobs()->get();
+                
+                foreach ($oldJobs as $job) {
+                    // Delete old job
+                    $job->delete();
+                }
+                
+                // After running through the manager jobs - delete the manager entry
+                $manager->delete();
+                
+            }
+            // Database was cleaned successfully
+            return null;
+        }
+        // Database clean was skipped
+        return false;
     }
 
 }

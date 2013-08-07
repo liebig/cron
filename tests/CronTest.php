@@ -58,6 +58,7 @@ class CronTest extends TestCase {
         \Config::set('cron::runInterval', 1);
         \Config::set('cron::databaseLogging', true);
         \Config::set('cron::logOnlyErrorJobsToDatabase', true);
+        \Config::set('cron::deleteDatabaseEntriesAfter', 240);
     }
 
     /**
@@ -605,6 +606,73 @@ class CronTest extends TestCase {
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
         $this->assertEquals(null, \Liebig\Cron\Cron::getLogger());
+    }
+    
+    /**
+     * Test method for testing the delete old database entries function
+     *
+     */
+    public function testDeleteOldDatabaseEntries() {
+        
+        $manager1 = new \Liebig\Cron\models\Manager();
+        $date1 = new \DateTime();
+        date_sub($date1, date_interval_create_from_date_string('240 hours'));
+        $manager1->rundate = $date1;
+        $manager1->runtime = 0.007;
+        $this->assertNotNull($manager1->save());
+
+        $newError1 = new \Liebig\Cron\models\Job();
+        $newError1->name = "test1";
+        $newError1->return = "test1 fails";
+        $newError1->cron_manager_id = $manager1->id;
+        $this->assertNotNull($newError1->save());
+        
+        $newError2 = new \Liebig\Cron\models\Job();
+        $newError2->name = "test2";
+        $newError2->return = "test2 fails";
+        $newError2->cron_manager_id = $manager1->id;
+        $this->assertNotNull($newError2->save());
+        
+        $manager2 = new \Liebig\Cron\models\Manager();
+        $date2 = new \DateTime();
+        date_sub($date2, date_interval_create_from_date_string('240 hours'));
+        $manager2->rundate = $date2;
+        $manager2->runtime = 0.007;
+        $this->assertNotNull($manager2->save());
+        
+        $newError3 = new \Liebig\Cron\models\Job();
+        $newError3->name = "test3";
+        $newError3->return = "tes31 fails";
+        $newError3->cron_manager_id = $manager2->id;
+        $this->assertNotNull($newError3->save());
+        
+        $manager3 = new \Liebig\Cron\models\Manager();
+        $date3 = new \DateTime();
+        date_sub($date3, date_interval_create_from_date_string('10 hours'));
+        $manager3->rundate = $date3;
+        $manager3->runtime = 0.007;
+        $this->assertNotNull($manager3->save());
+        
+        $newError4 = new \Liebig\Cron\models\Job();
+        $newError4->name = "test4";
+        $newError4->return = "test4 fails";
+        $newError4->cron_manager_id = $manager3->id;
+        $this->assertNotNull($newError4->save());
+        
+        $newError5 = new \Liebig\Cron\models\Job();
+        $newError5->name = "test5";
+        $newError5->return = "test5 fails";
+        $newError5->cron_manager_id = $manager3->id;
+        $this->assertNotNull($newError5->save());
+        
+        $this->assertEquals(3, \Liebig\Cron\models\Manager::count());
+        $this->assertEquals(5, \Liebig\Cron\models\Job::count());
+        
+        \Liebig\Cron\Cron::setDatabaseLogging(false);
+        \Liebig\Cron\Cron::run();
+        
+        $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
+        $this->assertEquals(2, \Liebig\Cron\models\Job::count());
     }
 
 }
