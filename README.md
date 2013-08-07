@@ -13,6 +13,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [--Set a Monolog logger](#setlogger)
 - [--Disable database logging](#disabledatabaselogging)
 - [--Log only error jobs to database](#logonlyerrorjobstodatabase)
+- [--Delete old database entries](#deleteolddatabaseentries)
 - [--Reset Cron](#reset)
 - [--Changing default values](#defaultvalues)
 - [Full example](#fullexample)
@@ -46,7 +47,13 @@ You don't need
 5.  Migrate the database with running the command `php artisan migrate --package="Liebig/Cron"`
 6.  Now you can use `\Liebig\Cron\Cron` everywhere for free
 
-**NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you need to migrate the new schema (`php artisan migrate:refresh`) or rename the database table cron_error to cron_job. You don't need this step if you disable database logging in general.
+**NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you need to migrate the new schema :
+-delete tables cron_manager, cron_error 
+-delete the columns `2013_06_27_143953_create_cronmanager_table` and `2013_06_27_144035_create_cronerror_table` from the migrations table 
+-run the command `php artisan migrate --package="Liebig/Cron"`
+
+-or rename the database table cron_error to cron_job and delete the rows created_at and updated_at from the tables cron_manager and cron_job. 
+**You don't need this steps if you disable database logging in general.**
 
 ---
 
@@ -226,6 +233,28 @@ public static function setLogOnlyErrorJobsToDatabase($bool) {
 #### Getter
 
 To receive the current boolean value of the logging only error jobs to database variable, just use the static `isLogOnlyErrorJobsToDatabase()` function.
+
+---
+
+<a name="deleteolddatabaseentries"></a>
+### Delete old database entries
+
+Cron can delete old database entries for you. Each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the **setDeleteDatabaseEntriesAfter** function. The default value is 240 hours (10 days).
+
+```
+public static function setDeleteDatabaseEntriesAfter($hours) {
+```
+
+#### Example
+
+```
+// Set the delete database entries reference value to 10 days (24 hours x 10 days)
+\Liebig\Cron\Cron::setDeleteDatabaseEntriesAfter(240);
+```
+
+#### Getter
+
+To receive the current reference value just use the static `getDeleteDatabaseEntriesAfter` function.
 
 ---
 
