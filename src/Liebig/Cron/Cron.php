@@ -445,7 +445,7 @@ class Cron {
      * @param  int $hours Set the delete time in hours
      * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
      */
-    public static function setDeleteDatabaseEntriesAfter($hours) {
+    public static function setDeleteDatabaseEntriesAfter($hours = 0) {
         if (is_int($hours)) {
             \Config::set('cron::deleteDatabaseEntriesAfter', $hours);
         } else {

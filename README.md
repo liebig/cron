@@ -239,7 +239,7 @@ To receive the current boolean value of the logging only error jobs to database 
 <a name="deleteolddatabaseentries"></a>
 ### Delete old database entries
 
-Cron can delete old database entries for you. Each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the **setDeleteDatabaseEntriesAfter** function. The default value is 240 hours (10 days).
+Cron can delete old database entries for you. Each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the **setDeleteDatabaseEntriesAfter** function. The default value is 240 hours (10 days). To disable the deletion of old entries just set the reference value to 0.
 
 ```
 public static function setDeleteDatabaseEntriesAfter($hours) {

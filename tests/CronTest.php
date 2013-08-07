@@ -673,6 +673,32 @@ class CronTest extends TestCase {
         
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
+        
+        \Liebig\Cron\Cron::setDeleteDatabaseEntriesAfter(0);
+        
+        $manager4 = new \Liebig\Cron\models\Manager();
+        $date4 = new \DateTime();
+        date_sub($date4, date_interval_create_from_date_string('2400 hours'));
+        $manager4->rundate = $date4;
+        $manager4->runtime = 0.007;
+        $this->assertNotNull($manager4->save());
+        
+        $newError6 = new \Liebig\Cron\models\Job();
+        $newError6->name = "test6";
+        $newError6->return = "test6 fails";
+        $newError6->cron_manager_id = $manager4->id;
+        $this->assertNotNull($newError6->save());
+        
+        $newError7 = new \Liebig\Cron\models\Job();
+        $newError7->name = "test7";
+        $newError7->return = "test7 fails";
+        $newError7->cron_manager_id = $manager3->id;
+        $this->assertNotNull($newError7->save());
+        
+        \Liebig\Cron\Cron::run();
+        
+        $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
+        $this->assertEquals(4, \Liebig\Cron\models\Job::count());
     }
 
 }
