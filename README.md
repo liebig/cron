@@ -52,7 +52,9 @@ You don't need
 1.  Delete the tables cron_manager, cron_error
 2.  Delete the columns `2013_06_27_143953_create_cronmanager_table` and `2013_06_27_144035_create_cronerror_table` from the migrations table
 3.  Run the command `php artisan migrate --package="Liebig/Cron"`
+
 Or rename the database table cron_error to cron_job and delete the rows created_at and updated_at from the tables cron_manager and cron_job.
+
 **You don't need this steps if you disable database logging in general.**
 
 ---
