@@ -68,6 +68,8 @@ class CronTest extends TestCase {
     /**
      * Test method for setting the Logger
      *
+     * @covers \Liebig\Cron\Cron::setLogger
+     * @covers \Liebig\Cron\Cron::getLogger
      */
     public function testSetRemoveLogger() {
         $this->assertNull(\Liebig\Cron\Cron::getLogger());
@@ -81,6 +83,7 @@ class CronTest extends TestCase {
      * Test method for logging
      * 
      * @covers \Liebig\Cron\Cron::setLogger
+     * @covers \Liebig\Cron\Cron::getLogger
      */
     public function testLogging() {
         $this->assertNull(\Liebig\Cron\Cron::getLogger());
