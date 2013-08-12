@@ -9,6 +9,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [Usage](#usage)
 - [--Add a cron job](#addjob)
 - [--Remove a cron job](#removejob)
+- [--Enable / disable a cron job](#enabledisable)
 - [--Run the cron jobs](#runjob)
 - [--Set a Monolog logger](#setlogger)
 - [--Disable database logging](#disabledatabaselogging)
@@ -126,6 +127,40 @@ public static function remove($name) {
 
 ---
 
+<a name="enabledisable"></a>
+### Enable or disable a cron job 
+
+After adding an enabled or disabled cron job ($isEnabled boolean parameter of the add method call) you can disable or enable a cron job by name. For this use the **setEnableJob** or **setDisableJob** function.
+
+```
+public static function setEnableJob($jobname, $enable = true) {
+```
+```
+public static function setDisableJob($jobname) {
+```
+
+#### Example
+
+```
+\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
+\Liebig\Cron\Cron::setDisableJob('example1');
+// No jobs will be called
+$report = \Liebig\Cron\Cron::run();
+\Liebig\Cron\Cron::setEnableJob('example1');
+// One job will be called
+$report = \Liebig\Cron\Cron::run();
+```
+
+#### Getter
+
+To receive the enable status boolean of a job, use the static `isJobEnabled($jobname)` method.
+
+---
+
+
 <a name="runjob"></a>
 ### Run the cron jobs
 
@@ -141,7 +176,7 @@ public static function run() {
 $report = \Liebig\Cron\Cron::run();
 ```
 
-**NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval and database loging and the other function calls.
+**NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval and database logging and the other function calls.
 
 ---
 
@@ -295,7 +330,7 @@ Cron ist designed to work out of the box without configuration. To enable this b
 
 #### Set methods
 
-You can use the Crons set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This change is temporary and the set methods must be called every time before running the **run** method. 
+You can use the Cron set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This changes are temporary and the set methods must be called every time before running the **run** method. 
 
 #### Config file
 

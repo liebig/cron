@@ -184,7 +184,7 @@ class Cron {
             $cronmanager->rundate = $runDate;
             $cronmanager->runtime = $afterAll - $beforeAll;
             $cronmanager->save();
-            
+
             $inTime = false;
             // Check if the run between this run and the last run is in good time (30 seconds tolerance) or not and log this event
             if ($timeBetween === -1) {
@@ -225,7 +225,7 @@ class Cron {
                 self::log('error', 'Cron run was finished with ' . count($errorJobs) . ' errors.');
             }
         }
-        
+
         // Check for old database entires and delete them
         self::deleteOldDatabaseEntries();
 
@@ -467,7 +467,7 @@ class Cron {
         }
     }
 
-     /**
+    /**
      * Delete old manager and job entries
      *
      * @static
@@ -485,20 +485,19 @@ class Cron {
 
             // Get the old manager entries which are expired
             $oldManagers = \Liebig\Cron\models\Manager::where('rundate', '<=', $now->format('Y-m-d H:i:s'))->get();
-            
+
             foreach ($oldManagers as $manager) {
 
                 // Get the old job entries from thee expired manager
                 $oldJobs = $manager->cronJobs()->get();
-                
+
                 foreach ($oldJobs as $job) {
                     // Delete old job
                     $job->delete();
                 }
-                
+
                 // After running through the manager jobs - delete the manager entry
                 $manager->delete();
-                
             }
             // Database was cleaned successfully
             return null;
@@ -506,5 +505,62 @@ class Cron {
         // Database clean was skipped
         return false;
     }
+
+    /**
+     * Enable a job by job name
+     *
+     * @static
+     * @param  String $jobname The name of the job which should be enabled
+     * @param  boolean $enable The trigger for enable (true) or disable (false) the job with the given name
+     * @return void|false Retun void if job was enabled successfully or false if there was an problem with the parameters
+     */
+    public static function setEnableJob($jobname, $enable = true) {
+        // Check patameter
+        if (!is_bool($enable)) {
+            return false;
+        }
+        
+        // Walk through the cron jobs and find the job with the given name
+        foreach (self::$cronJobs as $jobKey => $jobValue) {
+            if ($jobValue['name'] === $jobname) {
+                // If a job with the given name is found, set the enable boolean
+                self::$cronJobs[$jobKey]['enabled'] = $enable;
+                return null;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Disable a job by job name
+     *
+     * @static
+     * @param  String $jobname The name of the job which should be disabled
+     * @return void|false Retun void if job was disabled successfully or false if there was an problem with the parameters
+     */
+    public static function setDisableJob($jobname) {
+        return self::setEnableJob($jobname, false);
+    }
+    
+    /**
+     * Is the given job by name enabled or disabled
+     *
+     * @static
+     * @param  String $jobname The name of the job which should be checked
+     * @return void|false Retun boolean if job was enabled (true) or disabled (false) or null if no job with the given name is found
+     */
+    public static function isJobEnabled($jobname) {
+        
+        // Walk through the cron jobs and find the job with the given name
+        foreach (self::$cronJobs as $jobKey => $jobValue) {
+            if ($jobValue['name'] === $jobname) {
+                // If a job with the given name is found, return the is enabled boolean
+                return self::$cronJobs[$jobKey]['enabled'];
+            }
+        }
+        return null;
+        
+    }
+
 
 }
