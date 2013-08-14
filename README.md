@@ -24,16 +24,16 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 <a name="overview"></a>
 ## Overview
 
-You need
-*   this package
-*   to define a route with all cron job definations and closing with the `run()` method call
-*   a server or service which call the defined cron route every defined number of minutes (default is every minute) as normal web request (e.g. with wget)
+TODO
+*   download this package
+*   define a route with all cron job definitions, closing with the `run()` method call
+*   buy or rent a server or service which call the defined cron route every predefined number of minutes (default is every minute) as normal a web request (e.g. with wget)
 
-You don't need
-*   to create Artisan commands
-*   console access to your server
-*   to run the regular cron route requests on the same machine where your Laravel site is located
-*   to worry about (cron) job management anymore
+You don't have to
+*   ... create Artisan commands
+*   ... own shell access to your server
+*   ... run the regular cron route requests on the same machine where your Laravel site is located
+*   ... worry about (cron) job management anymore
 
 **NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
 
@@ -42,13 +42,13 @@ You don't need
 <a name="installation"></a>
 ## Installation
 
-1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require": {` section (Find more about composer at http://getcomposer.org/)
+1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
 2.  Run the `composer update --no-dev` command in your shell from your `/laravel/` directory 
 3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
 4.  Migrate the database with running the command `php artisan migrate --package="Liebig/Cron"`
 5.  Now you can use `\Liebig\Cron\Cron` everywhere for free
 
-**NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you need to migrate the new schema:
+**NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you have to migrate the new schema:
 
 1.  Delete the tables cron_manager, cron_error
 2.  Delete the columns `2013_06_27_143953_create_cronmanager_table` and `2013_06_27_144035_create_cronerror_table` from the migrations table
@@ -56,7 +56,7 @@ You don't need
 
 Or rename the database table cron_error to cron_job and delete the rows created_at and updated_at from the tables cron_manager and cron_job.
 
-**You don't need this steps if you disable database logging in general.**
+**You don't need these steps if you disable database logging in general.**
 
 ---
 
@@ -72,7 +72,7 @@ Adding a cron job to Cron is very easy by using the static **add** function. As 
 public static function add($name, $expression, $function, $isEnabled = true) {
 ```
 
-The **name** is needed for identify a cron job if an error appears and for logging.
+The **name** is needed for identifying a cron job if an error appears and for logging.
 
 The **expression** is a string of five or optional six subexpressions that describe details of the schedule. The syntax is based on the Linux cron daemon definition.
 ```
@@ -87,9 +87,9 @@ The **expression** is a string of five or optional six subexpressions that descr
     +------------------------- min (0 - 59)
 ```
 
-The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in success case or anything else in if there was an error while executing this job. By default, the error case will be logged to database and to a Monolog logger object (if logger is enabled). 
+The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in the case of success or anything else if there was an error while executing this job. By default, the error case will be logged to the database and to a Monolog logger object (if logger is enabled). 
 
-The **isEnabled** boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easy by giving a true boolean to the method. This parameter is optional and the default falue is enabled.
+The **isEnabled** boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easily by giving a true boolean to the method. This parameter is optional and the default value is enabled.
 
 #### Example
 
@@ -164,7 +164,7 @@ To receive the enable status boolean of a job, use the static `isJobEnabled($job
 <a name="runjob"></a>
 ### Run the cron jobs
 
-Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked and if the time has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed report. By default Cron reckons that you call this method every minute (* * * * *) and by default the report (with their cron jobs errors) will be logged to database. You can change this interval using the `setRunInterval` function.
+Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked. As soon as the time of the expression has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed report. By default Cron reckons that you call this method every minute (* * * * *) and by default the report (with their cron jobs errors) will be logged to database. You can change this interval using the `setRunInterval` function.
 
 ```
 public static function run() {
@@ -182,13 +182,13 @@ $report = \Liebig\Cron\Cron::run();
 
 ### Set the run interval
 
-The run interval is the time between two cron job route calls. Some cron service provider only support calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.
+The run interval is the time between two cron job route calls. Some cron service provider only supports calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.
 
 ```
 public static function setRunInterval($minutes) {
 ```
 
-**NOTE**: If the route call interval is not every minute, you have to adjust your cron job expressions to fit with this interval.
+**NOTE**: If the route call interval is not every minute you have to adjust your cron job expressions to fit to this interval.
 
 #### Example
 
@@ -233,7 +233,7 @@ To recieve the set logger object use the static `getLogger()` method. If no logg
 <a name="disabledatabaselogging"></a>
 ### Disable database logging
 
-By default database logging is enabled and after each cron run a manager object and job objects will be saved to database. We strongly recommend to keep the database logging acivated because only with this option Cron can check if the current run is in time. But maybe in some cases it makes sense to deactivate the database logging with the **setDatabaseLogging** method.
+By default database logging is enabled and after each cron run a manager object and job objects will be saved to database. We strongly recommend to keep the database logging activated because only with this option Cron can check if the current run is in time. It could make sense in some cases to deactivate the database logging with the **setDatabaseLogging** method.
 
 ```
 public static function setDatabaseLogging($bool) {
@@ -276,7 +276,7 @@ To receive the current boolean value of the logging only error jobs to database 
 <a name="deleteolddatabaseentries"></a>
 ### Delete old database entries
 
-Cron can delete old database entries for you. Each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the **setDeleteDatabaseEntriesAfter** function. The default value is 240 hours (10 days). To disable the deletion of old entries just set the reference value to 0.
+Cron can delete old database entries for you. During each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the **setDeleteDatabaseEntriesAfter** function. The default value is 240 hours (10 days). To disable the deletion of old entries just set the reference value to 0.
 
 ```
 public static function setDeleteDatabaseEntriesAfter($hours) {
@@ -326,7 +326,7 @@ public static function reset() {
 <a name="defaultvalues"></a>
 ### Changing default values
 
-Cron ist designed to work out of the box without configuration. To enable this behaviour a few default values are set. To change Crons default settings there are two possibilities.
+Cron is designed to work out of the box without configuration. To enable this behaviour a few default values are set. To change Crons default settings there are two possibilities.
 
 #### Set methods
 
@@ -334,16 +334,16 @@ You can use the Cron set methods (e.g. setDatabaseLogging, setRunInterval) to ch
 
 #### Config file
 
-The behaviour values will be loaded from a Cron config file. You can change this values easy by editing the `src/config/config.php` file. This is the more permanent way. If you only want to change settings for one run, we recommend to use the setter methods.
+The behaviour values will be loaded from a Cron config file. You can change this values easily by editing the `src/config/config.php` file. This is the more permanent way. If you only want to change settings for one run, we recommend to use the setter methods.
 
 ---
 
 <a name="fullexample"></a>
 ## Full example
 
-First we create a route which should be called in an defined interval.
+At first we create a route which should be called in a defined interval.
 
-**NOTE**: We have to protect this route because if someone call this uncontrolled, our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.
+**NOTE**: We have to protect this route because if someone calls this uncontrolled, our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.
 
 ```
 Route::get('/Cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
@@ -351,7 +351,7 @@ Route::get('/Cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
 });
 ```
 
-Now we can add our cron jobs to this route and of course call the run method. At the end we print the report out.
+Now we can add our cron jobs to this route and of course call the run method. At the end we print out the report.
 
 ```
 Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
@@ -368,7 +368,7 @@ Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
 });
 ```
 
-And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google know many good provider.
+And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google knows many good providers.
 
 ---
 
