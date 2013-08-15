@@ -24,10 +24,10 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 <a name="overview"></a>
 ## Overview
 
-TODO
-*   download this package
-*   define a route with all cron job definitions, closing with the `run()` method call
-*   buy or rent a server or service which call the defined cron route every predefined number of minutes (default is every minute) as normal a web request (e.g. with wget)
+You have to
+*   ... download this package
+*   ... define a route with all cron job definitions, closing with the `run()` method call
+*   ... buy or rent a server or service which call the defined cron route every predefined number of minutes (default is every minute) as normal a web request (e.g. with wget)
 
 You don't have to
 *   ... create Artisan commands
