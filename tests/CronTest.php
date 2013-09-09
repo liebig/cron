@@ -36,7 +36,7 @@ class CronTest extends TestCase {
         $this->setDefaultConfigValues();
 
         // Migrate all database tables
-        \Artisan::call('migrate', array('--package' => 'Liebig/Cron'));
+        \Artisan::call('migrate', array('--package' => 'liebig/cron'));
 
         // Set the path to logfile to the laravel storage / logs / directory as test.txt file
         // NOTE: THIS FILE MUST BE DELETED EACH TIME AFTER THE UNIT TEST WAS STARTED
