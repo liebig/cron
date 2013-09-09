@@ -45,14 +45,15 @@ You don't have to
 1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
 2.  Run the `composer update --no-dev` command in your shell from your `/laravel/` directory 
 3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
-4.  Migrate the database with running the command `php artisan migrate --package="Liebig/Cron"`
-5.  Now you can use `\Liebig\Cron\Cron` everywhere for free
+4.  Migrate the database with running the command `php artisan migrate --package="liebig/cron"`
+5.  Publish the configuration file with running the command `php artisan config:publish liebig/cron` - now you find the Cron configuration file in `/laravel/app/config/packages/liebig/cron` and this file won't be overwritten at any update
+6.  Now you can use `\Liebig\Cron\Cron` everywhere for free
 
 **NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you have to migrate the new schema:
 
 1.  Delete the tables cron_manager, cron_error
 2.  Delete the columns `2013_06_27_143953_create_cronmanager_table` and `2013_06_27_144035_create_cronerror_table` from the migrations table
-3.  Run the command `php artisan migrate --package="Liebig/Cron"`
+3.  Run the command `php artisan migrate --package="liebig/cron"`
 
 Or rename the database table cron_error to cron_job and delete the rows created_at and updated_at from the tables cron_manager and cron_job.
 
