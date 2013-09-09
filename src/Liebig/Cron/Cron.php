@@ -14,6 +14,8 @@
  */
 
 namespace Liebig\Cron;
+require_once __DIR__ . '/models/job.php';
+require_once __DIR__ . '/models/manager.php';
 
 /**
  * Cron
