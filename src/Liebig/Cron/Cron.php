@@ -217,6 +217,9 @@ class Cron {
             } else {
                 self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($errorJobs) . ' errors.');
             }
+            
+            // Check for old database entires and delete them
+            self::deleteOldDatabaseEntries();
 
             // If database logging is disabled
         } else {
@@ -228,8 +231,7 @@ class Cron {
             }
         }
 
-        // Check for old database entires and delete them
-        self::deleteOldDatabaseEntries();
+        
 
         // Return the cron jobs array (including rundate, in time boolean, runtime, number of errors and an array with the cron jobs reports)
         return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
