@@ -31,7 +31,7 @@ class CronTest extends TestCase {
 
         // Refresh the application and reset Cron
         $this->refreshApplication();
-        \Liebig\Cron\Cron::reset();
+        Cron::reset();
         // Set the default configuration values to the Laravel \Config object
         $this->setDefaultConfigValues();
 
@@ -72,11 +72,11 @@ class CronTest extends TestCase {
      * @covers \Liebig\Cron\Cron::getLogger
      */
     public function testSetRemoveLogger() {
-        $this->assertNull(\Liebig\Cron\Cron::getLogger());
-        \Liebig\Cron\Cron::setLogger($this->returnLogger());
-        $this->assertNotNull(\Liebig\Cron\Cron::getLogger());
-        \Liebig\Cron\Cron::setLogger();
-        $this->assertNull(\Liebig\Cron\Cron::getLogger());
+        $this->assertNull(Cron::getLogger());
+        Cron::setLogger($this->returnLogger());
+        $this->assertNotNull(Cron::getLogger());
+        Cron::setLogger();
+        $this->assertNull(Cron::getLogger());
     }
 
     /**
@@ -86,15 +86,15 @@ class CronTest extends TestCase {
      * @covers \Liebig\Cron\Cron::getLogger
      */
     public function testLogging() {
-        $this->assertNull(\Liebig\Cron\Cron::getLogger());
-        \Liebig\Cron\Cron::setLogger($this->returnLogger());
-        $this->assertNotNull(\Liebig\Cron\Cron::getLogger());
+        $this->assertNull(Cron::getLogger());
+        Cron::setLogger($this->returnLogger());
+        $this->assertNotNull(Cron::getLogger());
 
         $this->assertFileNotExists($this->pathToLogfile);
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertFileExists($this->pathToLogfile);
         $filesizeBefore = filesize($this->pathToLogfile);
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->refreshApplication();
         $this->assertGreaterThan($filesizeBefore, filesize($this->pathToLogfile));
     }
@@ -106,30 +106,30 @@ class CronTest extends TestCase {
      */
     public function testDeactivateDatabaseLogging() {
         $i = 0;
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        Cron::add('test2', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals($i, 2);
         $this->assertEquals(\Liebig\Cron\models\Manager::count(), 1);
         $this->assertEquals(\Liebig\Cron\models\Job::count(), 2);
 
-        \Liebig\Cron\Cron::setDatabaseLogging(false);
+        Cron::setDatabaseLogging(false);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals($i, 4);
         $this->assertEquals(\Liebig\Cron\models\Manager::count(), 1);
         $this->assertEquals(\Liebig\Cron\models\Job::count(), 2);
 
-        \Liebig\Cron\Cron::setDatabaseLogging(true);
+        Cron::setDatabaseLogging(true);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals($i, 6);
         $this->assertEquals(\Liebig\Cron\models\Manager::count(), 2);
         $this->assertEquals(\Liebig\Cron\models\Job::count(), 4);
@@ -143,26 +143,26 @@ class CronTest extends TestCase {
     public function testLogAllJobsToDatabase() {
 
         $i = 0;
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return null;
                 });
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        Cron::add('test2', '* * * * *', function() use (&$i) {
                     $i++;
                     return true;
                 });
-        \Liebig\Cron\Cron::add('test3', '* * * * *', function() use (&$i) {
+        Cron::add('test3', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
-        \Liebig\Cron\Cron::add('test4', '* * * * *', function() use (&$i) {
+        Cron::add('test4', '* * * * *', function() use (&$i) {
                     $i++;
                     return null;
                 });
 
-        \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
+        Cron::setLogOnlyErrorJobsToDatabase(false);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(4, $i);
 
         $jobs = \Liebig\Cron\models\Job::all();
@@ -180,9 +180,9 @@ class CronTest extends TestCase {
         $this->assertEquals('test4', $jobs[3]->name);
         $this->assertEquals('', $jobs[3]->return);
 
-        \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(true);
+        Cron::setLogOnlyErrorJobsToDatabase(true);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(8, $i);
         $jobs2 = \Liebig\Cron\models\Job::all();
         $this->assertEquals(6, count($jobs2));
@@ -202,38 +202,38 @@ class CronTest extends TestCase {
     public function testJobReturnValue() {
 
         $i = 0;
-        \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
+        Cron::setLogOnlyErrorJobsToDatabase(false);
 
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return null;
                 });
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        Cron::add('test2', '* * * * *', function() use (&$i) {
                     $i++;
                     return true;
                 });
-        \Liebig\Cron\Cron::add('test3', '* * * * *', function() use (&$i) {
+        Cron::add('test3', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
-        \Liebig\Cron\Cron::add('test4', '* * * * *', function() use (&$i) {
+        Cron::add('test4', '* * * * *', function() use (&$i) {
                     $i++;
                     return 12345;
                 });
-        \Liebig\Cron\Cron::add('test5', '* * * * *', function() use (&$i) {
+        Cron::add('test5', '* * * * *', function() use (&$i) {
                     $i++;
                     return 12.3456789;
                 });
-        \Liebig\Cron\Cron::add('test6', '* * * * *', function() use (&$i) {
+        Cron::add('test6', '* * * * *', function() use (&$i) {
                     $i++;
                     return 'Return text';
                 });
-        \Liebig\Cron\Cron::add('test7', '* * * * *', function() use (&$i) {
+        Cron::add('test7', '* * * * *', function() use (&$i) {
                     $i++;
                     return new ArrayObject();
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(7, $i);
 
         $jobs = \Liebig\Cron\models\Job::all();
@@ -268,11 +268,11 @@ class CronTest extends TestCase {
      */
     public function testRunWithTime() {
         $i = 0;
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return null;
                 });
-        $runResult1 = \Liebig\Cron\Cron::run();
+        $runResult1 = Cron::run();
         $this->assertEquals(1, $i);
         $this->assertEquals(0, $runResult1['errors']);
         $this->assertEquals(1, count($runResult1['crons']));
@@ -280,10 +280,10 @@ class CronTest extends TestCase {
         $this->assertEquals(null, $runResult1['crons'][0]['return']);
         $this->assertEquals(-1, $runResult1['inTime']);
 
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() {
+        Cron::add('test2', '* * * * *', function() {
                     return 'return of test2';
                 });
-        $runResult2 = \Liebig\Cron\Cron::run();
+        $runResult2 = Cron::run();
 
         $this->assertEquals(2, $i);
         $this->assertEquals(1, $runResult2['errors']);
@@ -294,23 +294,23 @@ class CronTest extends TestCase {
         $this->assertEquals('return of test2', $runResult2['crons'][1]['return']);
 
         sleep(60);
-        $runResult3 = \Liebig\Cron\Cron::run();
+        $runResult3 = Cron::run();
         $this->assertEquals(3, $i);
         $this->assertEquals(true, $runResult3['inTime']);
 
         sleep(25);
-        $runResult4 = \Liebig\Cron\Cron::run();
+        $runResult4 = Cron::run();
         $this->assertEquals(4, $i);
         $this->assertEquals(false, $runResult4['inTime']);
 
         sleep(90);
-        $runResult5 = \Liebig\Cron\Cron::run();
+        $runResult5 = Cron::run();
         $this->assertEquals($i, 5);
         $this->assertEquals(false, $runResult5['inTime']);
 
-        \Liebig\Cron\Cron::setRunInterval(2);
+        Cron::setRunInterval(2);
         sleep(120);
-        $runResult6 = \Liebig\Cron\Cron::run();
+        $runResult6 = Cron::run();
         $this->assertEquals($i, 6);
         $this->assertEquals(true, $runResult6['inTime']);
     }
@@ -322,37 +322,37 @@ class CronTest extends TestCase {
      */
     public function testRunEnabled() {
         $i = 0;
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return null;
                 }, false);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(0, $i);
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(0, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(0, $i);
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(0, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        Cron::add('test2', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 }, true);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(1, $i);
         $this->assertEquals(3, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(1, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::add('test3', '* * * * *', function() use (&$i) {
+        Cron::add('test3', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(3, $i);
         $this->assertEquals(4, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(3, \Liebig\Cron\models\Job::count());
@@ -366,43 +366,43 @@ class CronTest extends TestCase {
     public function testAddCronJob() {
 
         $i = 0;
-        $this->assertEquals(null, \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        $this->assertEquals(null, Cron::add('test1', '* * * * *', function() use (&$i) {
                             $i++;
                             return false;
                         }));
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::add('test2', '* * * * * *', function() use (&$i) {
+        $this->assertEquals(null, Cron::add('test2', '* * * * * *', function() use (&$i) {
                             $i++;
                             return false;
                         }));
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2, $i);
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
         // Should not work - same job name
-        $this->assertEquals(false, \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        $this->assertEquals(false, Cron::add('test2', '* * * * *', function() use (&$i) {
                             $i++;
                             return false;
                         }));
 
         // Should not work - expression wrong
-        $this->assertEquals(false, \Liebig\Cron\Cron::add('test3', 'NOT', function() use (&$i) {
+        $this->assertEquals(false, Cron::add('test3', 'NOT', function() use (&$i) {
                             $i++;
                             return false;
                         }));
 
         // Should not work - expression wrong (too long)
-        $this->assertEquals(false, \Liebig\Cron\Cron::add('test4', '* * * * * * *', function() use (&$i) {
+        $this->assertEquals(false, Cron::add('test4', '* * * * * * *', function() use (&$i) {
                             $i++;
                             return false;
                         }));
 
         // Should not work - function is not a function
-        $this->assertEquals(false, \Liebig\Cron\Cron::add('test5', '* * * * *', 'This is not a function'));
+        $this->assertEquals(false, Cron::add('test5', '* * * * *', 'This is not a function'));
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(4, $i);
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(4, \Liebig\Cron\models\Job::count());
@@ -416,48 +416,48 @@ class CronTest extends TestCase {
     public function testRemoveCronJob() {
 
         $i = 0;
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(1, $i);
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(1, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::remove('test1'));
+        $this->assertEquals(null, Cron::remove('test1'));
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(1, $i);
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(1, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2, $i);
         $this->assertEquals(3, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(3, $i);
         $this->assertEquals(4, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(3, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::remove('test1'));
+        $this->assertEquals(null, Cron::remove('test1'));
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(3, $i);
         $this->assertEquals(5, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(3, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(false, \Liebig\Cron\Cron::remove('unknown'));
+        $this->assertEquals(false, Cron::remove('unknown'));
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(3, $i);
         $this->assertEquals(6, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(3, \Liebig\Cron\models\Job::count());
@@ -473,25 +473,25 @@ class CronTest extends TestCase {
         $count = 0;
         for ($i = 1; $i <= 1000; $i++) {
 
-            \Liebig\Cron\Cron::add('test' . $i, '* * * * * *', function() use (&$count) {
+            Cron::add('test' . $i, '* * * * * *', function() use (&$count) {
                         $count++;
                         return null;
                     });
         }
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(1000, $count);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2000, $count);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(3000, $count);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(4000, $count);
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(5000, $count);
     }
 
@@ -575,17 +575,17 @@ class CronTest extends TestCase {
      */
     public function testDatabaseModelsAfterRun() {
 
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() {
+        Cron::add('test1', '* * * * *', function() {
                     return 'test1 fails';
                 });
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() {
+        Cron::add('test2', '* * * * *', function() {
                     return null;
                 });
-        \Liebig\Cron\Cron::add('test3', '* * * * *', function() {
+        Cron::add('test3', '* * * * *', function() {
                     return 'test3 fails';
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
 
         $manager = \Liebig\Cron\models\Manager::first();
 
@@ -611,30 +611,30 @@ class CronTest extends TestCase {
     public function testReset() {
 
         $i = 0;
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+        Cron::add('test1', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        Cron::add('test2', '* * * * *', function() use (&$i) {
                     $i++;
                     return false;
                 });
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2, $i);
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::setLogger($this->returnLogger());
+        Cron::setLogger($this->returnLogger());
 
-        \Liebig\Cron\Cron::reset();
+        Cron::reset();
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
 
         $this->assertEquals(2, $i);
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
-        $this->assertEquals(null, \Liebig\Cron\Cron::getLogger());
+        $this->assertEquals(null, Cron::getLogger());
     }
 
     /**
@@ -704,13 +704,13 @@ class CronTest extends TestCase {
         $this->assertEquals(3, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(5, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::setDeleteDatabaseEntriesAfter(240);
-        \Liebig\Cron\Cron::run();
+        Cron::setDeleteDatabaseEntriesAfter(240);
+        Cron::run();
 
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
-        \Liebig\Cron\Cron::setDeleteDatabaseEntriesAfter(0);
+        Cron::setDeleteDatabaseEntriesAfter(0);
 
         $manager4 = new \Liebig\Cron\models\Manager();
         $date4 = new \DateTime();
@@ -733,7 +733,7 @@ class CronTest extends TestCase {
         $newError7->cron_manager_id = $manager3->id;
         $this->assertNotNull($newError7->save());
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
 
         $this->assertEquals(4, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(4, \Liebig\Cron\models\Job::count());
@@ -752,88 +752,148 @@ class CronTest extends TestCase {
         $iTest2 = 0;
         $iTest3 = 0;
         
-        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$iTest1) {
+        Cron::add('test1', '* * * * *', function() use (&$iTest1) {
                     $iTest1++;
                     return false;
                 }, true);
-        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$iTest2) {
+        Cron::add('test2', '* * * * *', function() use (&$iTest2) {
                     $iTest2++;
                     return false;
                 }, true);
-        \Liebig\Cron\Cron::add('test3', '* * * * *', function() use (&$iTest3) {
+        Cron::add('test3', '* * * * *', function() use (&$iTest3) {
                     $iTest3++;
                     return false;
                 }, false);
 
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test1'));
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test2'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test3'));
-        $this->assertEquals(null, \Liebig\Cron\Cron::isJobEnabled('test4'));
+        $this->assertEquals(true, Cron::isJobEnabled('test1'));
+        $this->assertEquals(true, Cron::isJobEnabled('test2'));
+        $this->assertEquals(false, Cron::isJobEnabled('test3'));
+        $this->assertEquals(null, Cron::isJobEnabled('test4'));
 
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(1, $iTest1);
         $this->assertEquals(1, $iTest2);
         $this->assertEquals(0, $iTest3);
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::setEnableJob('test3'));
+        $this->assertEquals(null, Cron::setEnableJob('test3'));
 
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test1'));
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test2'));
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test3'));
-        $this->assertEquals(null, \Liebig\Cron\Cron::isJobEnabled('test4'));
+        $this->assertEquals(true, Cron::isJobEnabled('test1'));
+        $this->assertEquals(true, Cron::isJobEnabled('test2'));
+        $this->assertEquals(true, Cron::isJobEnabled('test3'));
+        $this->assertEquals(null, Cron::isJobEnabled('test4'));
         
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2, $iTest1);
         $this->assertEquals(2, $iTest2);
         $this->assertEquals(1, $iTest3);
         $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(5, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::setDisableJob('test1'));
-        $this->assertEquals(null, \Liebig\Cron\Cron::setDisableJob('test3'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::setDisableJob('noSuchJob'));
+        $this->assertEquals(null, Cron::setDisableJob('test1'));
+        $this->assertEquals(null, Cron::setDisableJob('test3'));
+        $this->assertEquals(false, Cron::setDisableJob('noSuchJob'));
 
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test1'));
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test2'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test3'));
-        $this->assertEquals(null, \Liebig\Cron\Cron::isJobEnabled('test4'));
+        $this->assertEquals(false, Cron::isJobEnabled('test1'));
+        $this->assertEquals(true, Cron::isJobEnabled('test2'));
+        $this->assertEquals(false, Cron::isJobEnabled('test3'));
+        $this->assertEquals(null, Cron::isJobEnabled('test4'));
         
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2, $iTest1);
         $this->assertEquals(3, $iTest2);
         $this->assertEquals(1, $iTest3);
         $this->assertEquals(3, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(6, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::setEnableJob('test2', false));
+        $this->assertEquals(null, Cron::setEnableJob('test2', false));
 
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test1'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test2'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test3'));
-        $this->assertEquals(null, \Liebig\Cron\Cron::isJobEnabled('test4'));
+        $this->assertEquals(false, Cron::isJobEnabled('test1'));
+        $this->assertEquals(false, Cron::isJobEnabled('test2'));
+        $this->assertEquals(false, Cron::isJobEnabled('test3'));
+        $this->assertEquals(null, Cron::isJobEnabled('test4'));
         
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(2, $iTest1);
         $this->assertEquals(3, $iTest2);
         $this->assertEquals(1, $iTest3);
         $this->assertEquals(4, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(6, \Liebig\Cron\models\Job::count());
 
-        $this->assertEquals(null, \Liebig\Cron\Cron::setEnableJob('test1', true));
+        $this->assertEquals(null, Cron::setEnableJob('test1', true));
 
-        $this->assertEquals(true, \Liebig\Cron\Cron::isJobEnabled('test1'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test2'));
-        $this->assertEquals(false, \Liebig\Cron\Cron::isJobEnabled('test3'));
-        $this->assertEquals(null, \Liebig\Cron\Cron::isJobEnabled('test4'));
+        $this->assertEquals(true, Cron::isJobEnabled('test1'));
+        $this->assertEquals(false, Cron::isJobEnabled('test2'));
+        $this->assertEquals(false, Cron::isJobEnabled('test3'));
+        $this->assertEquals(null, Cron::isJobEnabled('test4'));
         
-        \Liebig\Cron\Cron::run();
+        Cron::run();
         $this->assertEquals(3, $iTest1);
         $this->assertEquals(3, $iTest2);
         $this->assertEquals(1, $iTest3);
         $this->assertEquals(5, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(7, \Liebig\Cron\models\Job::count());
+    }
+    
+    /**
+     * Test method for activating and deactivating the logging of all jobs to 
+     * Database and testing with full namespace declaration
+     *
+     * @covers \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase
+     */
+    public function testLogAllJobsToDatabaseWithFullNamespaceDeclaration() {
+
+        $i = 0;
+        \Liebig\Cron\Cron::add('test1', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return null;
+                });
+       \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return true;
+                });
+        \Liebig\Cron\Cron::add('test3', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return false;
+                });
+        \Liebig\Cron\Cron::add('test4', '* * * * *', function() use (&$i) {
+                    $i++;
+                    return null;
+                });
+
+        \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
+
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals(4, $i);
+
+        $jobs = \Liebig\Cron\models\Job::all();
+        $this->assertEquals(4, count($jobs));
+
+        $this->assertEquals('test1', $jobs[0]->name);
+        $this->assertEquals('', $jobs[0]->return);
+
+        $this->assertEquals('test2', $jobs[1]->name);
+        $this->assertEquals('true', $jobs[1]->return);
+
+        $this->assertEquals('test3', $jobs[2]->name);
+        $this->assertEquals('false', $jobs[2]->return);
+
+        $this->assertEquals('test4', $jobs[3]->name);
+        $this->assertEquals('', $jobs[3]->return);
+
+        \Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(true);
+
+        \Liebig\Cron\Cron::run();
+        $this->assertEquals(8, $i);
+        $jobs2 = \Liebig\Cron\models\Job::all();
+        $this->assertEquals(6, count($jobs2));
+
+        $this->assertEquals('test2', $jobs2[4]->name);
+        $this->assertEquals('true', $jobs2[4]->return);
+
+        $this->assertEquals('test3', $jobs2[5]->name);
+        $this->assertEquals('false', $jobs2[5]->return);
     }
 
 }
