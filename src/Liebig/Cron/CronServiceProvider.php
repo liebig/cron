@@ -28,7 +28,14 @@ class CronServiceProvider extends ServiceProvider {
      * @return void
      */
     public function register() {
-        //
+        $this->app['cron'] = $this->app->share(function($app) {
+            return  new Cron;
+        });
+        
+        $this->app->booting(function() {
+            $loader = \Illuminate\Foundation\AliasLoader::getInstance();
+            $loader->alias('Cron', 'Liebig\Cron\Facades\Cron');
+        });
     }
 
     /**
