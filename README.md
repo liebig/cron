@@ -47,17 +47,9 @@ You don't have to
 3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
 4.  Migrate the database with running the command `php artisan migrate --package="liebig/cron"`
 5.  Publish the configuration file with running the command `php artisan config:publish liebig/cron` - now you find the Cron configuration file in `/laravel/app/config/packages/liebig/cron` and this file won't be overwritten at any update
-6.  Now you can use `\Liebig\Cron\Cron` everywhere for free
+6.  Now you can use `Cron` everywhere for free
 
-**NOTE**: From version v0.8.x to v0.9.x the database schema has changed - so you have to migrate the new schema:
-
-1.  Delete the tables cron_manager, cron_error
-2.  Delete the columns `2013_06_27_143953_create_cronmanager_table` and `2013_06_27_144035_create_cronerror_table` from the migrations table
-3.  Run the command `php artisan migrate --package="liebig/cron"`
-
-Or rename the database table cron_error to cron_job and delete the rows created_at and updated_at from the tables cron_manager and cron_job.
-
-**You don't need these steps if you disable database logging in general.**
+**NOTE**: Since version v0.9.3 you can use `Cron` instead of `\Liebig\Cron\Cron`
 
 ---
 
@@ -95,11 +87,11 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
 #### Example
 
 ```
-\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-\Liebig\Cron\Cron::add('example2', '*/2 * * * *', function() {
+Cron::add('example2', '*/2 * * * *', function() {
                     // Oh no, this job has errors and runs every two minutes
                     return false;
                 }, true);
@@ -119,11 +111,11 @@ public static function remove($name) {
 #### Example
 
 ```
-\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-\Liebig\Cron\Cron::remove('example1');
+Cron::remove('example1');
 ```
 
 ---
@@ -143,16 +135,16 @@ public static function setDisableJob($jobname) {
 #### Example
 
 ```
-\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-\Liebig\Cron\Cron::setDisableJob('example1');
+Cron::setDisableJob('example1');
 // No jobs will be called
-$report = \Liebig\Cron\Cron::run();
-\Liebig\Cron\Cron::setEnableJob('example1');
+$report = Cron::run();
+Cron::setEnableJob('example1');
 // One job will be called
-$report = \Liebig\Cron\Cron::run();
+$report = Cron::run();
 ```
 
 #### Getter
@@ -174,7 +166,7 @@ public static function run() {
 #### Example
 
 ```
-$report = \Liebig\Cron\Cron::run();
+$report = Cron::run();
 ```
 
 **NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval and database logging and the other function calls.
@@ -195,9 +187,9 @@ public static function setRunInterval($minutes) {
 
 ```
 // Set the run intervall to 15 minutes
-\Liebig\Cron\Cron::setRunInterval(15);
+Cron::setRunInterval(15);
 // Or set the run intervall to 30 minutes
-\Liebig\Cron\Cron::setRunInterval(30);
+Cron::setRunInterval(30);
 ```
 
 #### Getter
@@ -220,9 +212,9 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 #### Example
 
 ```
-\Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
+Cron::setLogger(new \Monolog\Logger('cronLogger'));
 // And remove the logger again
-\Liebig\Cron\Cron::setLogger();
+Cron::setLogger();
 ```
 
 #### Getter
@@ -243,7 +235,7 @@ public static function setDatabaseLogging($bool) {
 #### Example
 
 ```
-\Liebig\Cron\Cron::setDatabaseLogging(false);
+Cron::setDatabaseLogging(false);
 ```
 
 #### Getter
@@ -265,7 +257,7 @@ public static function setLogOnlyErrorJobsToDatabase($bool) {
 
 ```
 // Log all jobs (not only the error jobs) to database
-\Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
+Cron::setLogOnlyErrorJobsToDatabase(false);
 ```
 
 #### Getter
@@ -287,7 +279,7 @@ public static function setDeleteDatabaseEntriesAfter($hours) {
 
 ```
 // Set the delete database entries reference value to 10 days (24 hours x 10 days)
-\Liebig\Cron\Cron::setDeleteDatabaseEntriesAfter(240);
+Cron::setDeleteDatabaseEntriesAfter(240);
 ```
 
 #### Getter
@@ -308,18 +300,14 @@ public static function reset() {
 #### Example
 
 ```
-\Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-\Liebig\Cron\Cron::setLogger(new \Monolog\Logger('cronLogger'));
-\Liebig\Cron\Cron::setLogOnlyErrorJobsToDatabase(false);
-\Liebig\Cron\Cron::setDatabaseLogging(false);
-\Liebig\Cron\Cron::reset();
-// \Liebig\Cron\Cron::getLogger() === NULL
-// \Liebig\Cron\Cron::remove('example1') === false
-// \Liebig\Cron\Cron::isLogOnlyErrorJobsToDatabase() === true
-// \Liebig\Cron\Cron::isDatabaseLogging() === true
+Cron::setLogger(new \Monolog\Logger('cronLogger'));
+Cron::reset();
+// Cron::remove('example1') === false
+// Cron::getLogger() === NULL
 ```
 
 ---
@@ -356,15 +344,15 @@ Now we can add our cron jobs to this route and of course call the run method. At
 
 ```
 Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
-    \Liebig\Cron\Cron::add('example1', '* * * * *', function() {
+    Cron::add('example1', '* * * * *', function() {
                         // Do some crazy things every minute
                         return null;
                     });
-    \Liebig\Cron\Cron::add('example2', '*/2 * * * *', function() {
+    Cron::add('example2', '*/2 * * * *', function() {
                         // Do some crazy things every two minutes
                         return null;
                     });
-    $report = \Liebig\Cron\Cron::run();
+    $report = Cron::run();
     print_r ($report);
 });
 ```
