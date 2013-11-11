@@ -359,19 +359,19 @@ Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
 
 And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google knows many good providers.
 
-To configure a wget web request by using `crontab -e` or a control panel software (e.g. cPanel or Plesk) on an own (virtual) server use the following code:
+To configure a `wget` web request by using `crontab -e` or a control panel software (e.g. cPanel or Plesk) on an own (virtual) server use the following code:
 
 ```
 * * * * * wget -O - http://yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf >/dev/null 2>&1
 ```
 
-For using cURL instead of wget on your server use this code:
+For using `cURL` instead of wget on your server use this code:
 
 ```
 * * * * * curl "http:// yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf" >/dev/null 2>&1
 ```
 
-The starting five asterisks are the cron expressions. We want to start our Cron management every minute in this example. The tool `wget` retrieves files using HTTP, HTTPS and FTP. Using the parameter `-O -` causes that the output of the web request will be sent to STDOUT (standard output). cURL is a command line tool for getting or sending files using URL syntax. By adding `>/dev/null` we instruct standard output to be redirect to a black hole (/dev/null). By adding `2>&1` we instruct STDERR (standard errors) to also be sent to STDOUT (in this example this is /dev/null). So it will load our website at the Cron route every minute, but never write a file anywhere.
+The starting five asterisks are the cron expressions. We want to start our Cron management every minute in this example. The tool `wget` retrieves files using HTTP, HTTPS and FTP. Using the parameter `-O -` causes that the output of the web request will be sent to STDOUT (standard output). `cURL` is a command line tool for getting or sending files using URL syntax. By adding `>/dev/null` we instruct standard output to be redirect to a black hole (/dev/null). By adding `2>&1` we instruct STDERR (standard errors) to also be sent to STDOUT (in this example this is /dev/null). So it will load our website at the Cron route every minute, but never write a file anywhere.
 
 ---
 
