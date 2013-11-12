@@ -232,7 +232,7 @@ To recieve the enabled or disabled boolean value use the static `isLaravelLoggin
 <a name="setlogger"></a>
 ### Set a Monolog logger
 
-If logging should be activated just add a Monolog logger object to Crons static **setLogger** method. Only Monolog is supported at the moment.
+If you want to add a custom Monolog logger object to Cron use the static **setLogger** method.
 
 ```
 public static function setLogger(\Monolog\Logger $logger = null) {
