@@ -399,7 +399,7 @@ To configure a `wget` web request by using `crontab -e` or a control panel softw
 For using `cURL` instead of wget on your server use this code:
 
 ```
-* * * * * curl "http:// yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf" >/dev/null 2>&1
+* * * * * curl "http://yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf" >/dev/null 2>&1
 ```
 
 The starting five asterisks are the cron expressions. We want to start our Cron management every minute in this example. The tool `wget` retrieves files using HTTP, HTTPS and FTP. Using the parameter `-O -` causes that the output of the web request will be sent to STDOUT (standard output). `cURL` is a command line tool for getting or sending files using URL syntax. By adding `>/dev/null` we instruct standard output to be redirect to a black hole (/dev/null). By adding `2>&1` we instruct STDERR (standard errors) to also be sent to STDOUT (in this example this is /dev/null). So it will load our website at the Cron route every minute, but never write a file anywhere.
