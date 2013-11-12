@@ -199,7 +199,6 @@ To recieve the current set run interval use the static `getRunInterval()` method
 
 ---
 
-TODO
 <a name="enablelarvellogging"></a>
 ### Enable or disable Laravel logging
 
