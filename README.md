@@ -11,6 +11,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [|--Remove a cron job](#removejob)
 - [|--Enable / disable a cron job](#enabledisable)
 - [|--Run the cron jobs](#runjob)
+- [|--Enable / Laravel logging](#enablelarvellogging)
 - [|--Set a Monolog logger](#setlogger)
 - [|--Disable database logging](#disabledatabaselogging)
 - [|--Log only error jobs to database](#logonlyerrorjobstodatabase)
@@ -197,6 +198,36 @@ Cron::setRunInterval(30);
 To recieve the current set run interval use the static `getRunInterval()` method.
 
 ---
+
+TODO
+<a name="enablelarvellogging"></a>
+### Enable or disable Laravel logging
+
+The Laravel logging facilities provide a layer on top of Monolog. By default, Laravel is configured to create daily log files for your application, and these files are stored in `app/storage/logs`. Cron will use Laravel logging facilities by default. You can disable this by setting the `laravelLogging` config.php value to false or call at runtime the **setLaravelLogging** function.
+
+```
+public static function setLaravelLogging($bool) {
+```
+
+**NOTE**: You can add a custom Monolog logger to Cron and enable Laravel logging. In this case all messages will be logged to Laravel and to your custom Monolog logger object.
+
+#### Example
+
+```
+// Laravel logging is enabled by default
+Cron::run();
+// Disable Laravel logging
+Cron::setLaravelLogging(false);
+// Laravel logging is disabled
+Cron::run();
+```
+
+#### Getter
+
+To recieve the enabled or disabled boolean value use the static `isLaravelLogging()` method.
+
+---
+
 
 <a name="setlogger"></a>
 ### Set a Monolog logger
