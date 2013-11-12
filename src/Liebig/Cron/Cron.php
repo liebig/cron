@@ -61,29 +61,29 @@ class Cron {
      * @param  string $expression The cron job expression (e.g. for every minute: '* * * * *')
      * @param  function $function The anonymous function which will be executed
      * @param  boolean $isEnabled optional If the cron job is enabled or not - the standard configuration is true
-     * @return void|false Return void if everything worked and false if there is any error
+     * @throws InvalidArgumentException
      */
     public static function add($name, $expression, $function, $isEnabled = true) {
 
         // Check if the given expression is set and is correct
         if (!isset($expression) || count(explode(' ', $expression)) < 5 || count(explode(' ', $expression)) > 6) {
-            return false;
+            throw new \InvalidArgumentException('Method argument $expression is not set or invalid.');
         }
 
         // Check if the given closure is callabale
         if (!is_callable($function)) {
-            return false;
+            throw new \InvalidArgumentException('Method argument $function is not a callable closure.');
         }
 
         // Check if the isEnabled boolean is okay, if not use the standard 'true' configuration
         if (!is_bool($isEnabled)) {
-            $isEnabled = true;
+             throw new \InvalidArgumentException('Method argument $isEnabled is not a boolean.');
         }
 
         // Check if the name is unique
         foreach (self::$cronJobs as $job) {
             if ($job['name'] === $name) {
-                return false;
+                throw new \InvalidArgumentException('Cron job $name "' . $name . '" is not unique and already used.');
             }
         }
 
@@ -99,7 +99,7 @@ class Cron {
      * 
      * @static
      * @param string $name The name of the cron job which should be removed from execution
-     * @return void|false Retun null if a cron job with the given name was found and was successfully removed or return false if no job with the given name was found
+     * @return void|false Return null if a cron job with the given name was found and was successfully removed or return false if no job with the given name was found
      */
     public static function remove($name) {
 
@@ -153,7 +153,7 @@ class Cron {
         foreach (self::$cronJobs as $job) {
 
             // If the job is enabled and if the time for this job has come
-            if ($job['enabled'] === true && $job['expression']->isDue()) {
+            if ($job['enabled'] && $job['expression']->isDue()) {
 
                 // Get the start time of the job runtime
                 $beforeOne = microtime(true);
@@ -168,6 +168,8 @@ class Cron {
                 if ($return !== null) {
                     // Add to error array
                     array_push($errorJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
+                    // Log error job
+                    self::log('error', 'Job with the name ' . $job['name'] . ' was run with errors.');
                 }
 
                 // Push the information of the ran cron job to the allJobs array (including name, return value, runtime)
@@ -190,7 +192,7 @@ class Cron {
             $inTime = false;
             // Check if the run between this run and the last run is in good time (30 seconds tolerance) or not and log this event
             if ($timeBetween === -1) {
-                self::log('warning', 'Cron run with manager id ' . $cronmanager->id . ' has no previous ran jobs.');
+                self::log('notice', 'Cron run with manager id ' . $cronmanager->id . ' has no previous managers.');
                 $inTime = -1;
             } elseif (($runInterval * 60) - $timeBetween <= -30) {
                 self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
@@ -231,8 +233,6 @@ class Cron {
             }
         }
 
-        
-
         // Return the cron jobs array (including rundate, in time boolean, runtime, number of errors and an array with the cron jobs reports)
         return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
     }
@@ -256,7 +256,7 @@ class Cron {
             // If the type is NULL there was no error running this job - insert empty string
             if ($returnType === 'NULL') {
                 $jobEntry->return = '';
-                // If the tyoe is boolean save the value as string
+                // If the type is boolean save the value as string
             } else if ($returnType === 'boolean') {
                 if ($job['return']) {
                     $jobEntry->return = 'true';
@@ -268,7 +268,7 @@ class Cron {
                 // We cut the string at 500 characters to not overcharge the database
                 $jobEntry->return = substr((string) $job['return'], 0, 500);
             } else {
-                $jobEntry->return = 'Return value of job ' . $job['name'] . ' has the type ' . $returnType . ' - this type cannot be displayed as string (type error)';
+                $jobEntry->return = 'Return object type is ' . $returnType;
             }
 
             $jobEntry->runtime = $job['runtime'];
@@ -278,7 +278,7 @@ class Cron {
     }
 
     /**
-     * Add a Monolog logger object and activate logging
+     * Add a custom Monolog logger object
      *
      * @static
      * @param  \Monolog\Logger $logger optional The Monolog logger object which will be used for cron logging - if this parameter is null the logger will be removed
@@ -298,16 +298,16 @@ class Cron {
     }
 
     /**
-     * Log a message with the given level to the Monolog logger object if one is set
+     * Log a message with the given level to Monolog logger if one is set or to Laravels build in Logger if it is enabled
      *
      * @static
      * @param  string $level The logger level as string which can be debug, info, notice, warning, error, critival, alert, emergency
      * @param  string $message The message which will be logged to Monolog
-     * @return void|false Retun false if there was an error or void if logging is enabled and the message was given to the Monolog logger object
+     * @throws InvalidArgumentException if the $level string does not match with debug, info, notice, warning, error, critival, alert or emergency
      */
     private static function log($level, $message) {
 
-        // If no Monolog logger object is set jus retun false
+        // If no Monolog logger object is set,  return false
         if (!empty(self::$logger)) {
             // Switch the lower case level string and log the message with the given level
             switch (strtolower($level)) {
@@ -336,55 +336,119 @@ class Cron {
                     self::$logger->addEmergency($message);
                     break;
                 default:
-                    return false;
+                    throw new \InvalidArgumentException('Invalid log $level parameter.');
             }
+        }
+        
+        $laravelLogging = \Config::get('cron::laravelLogging');
+        if (is_bool($laravelLogging) && $laravelLogging) {
+            switch (strtolower($level)) {
+                case "debug":
+                    \Log::debug($message);
+                    break;
+                case "info":
+                    \Log::info($message);
+                    break;
+                case "notice":
+                    \Log::notice($message);
+                    break;
+                case "warning":
+                    \Log::warning($message);
+                    break;
+                case "error":
+                    \Log::error($message);
+                    break;
+                case "critical":
+                    \Log::critical($message);
+                    break;
+                case "alert":
+                    \Log::alert($message);
+                    break;
+                case "emergency":
+                    \Log::emergency($message);
+                    break;
+                default:
+                    throw new \InvalidArgumentException('Invalid log $level parameter.');
+            }
+        }
+        
+    }
+    
+    /**
+     * Enable or disable Laravels build in logging
+     *
+     * @static
+     * @param  boolean $bool Set to enable or disable Laravels logging
+     * @throws InvalidArgumentException if the $bool function paramter is not a boolean
+     */
+    public static function setLaravelLogging($bool) {
+        if (is_bool($bool)) {
+            \Config::set('cron::laravelLogging', $bool);
         } else {
-            return false;
+            throw new \InvalidArgumentException('Function paramter $bool with value "' . $bool . '" is not a boolean.');
         }
     }
 
     /**
-     * Enable or disable database logging - start value is true
+     * Is Laravels build in logging enabled or disabled
+     * 
+     * @static
+     * @return boolean Return boolean which indicates if Laravels logging is enabled or disabled
+     * @throws \UnexpectedValueException if the cron::laravelLogging config value is not a boolean or NULL
+     */
+    public static function isLaravelLogging() {
+        $laravelLogging = \Config::get('cron::laravelLogging');
+        if (is_bool($laravelLogging) || is_null($laravelLogging)) {
+            return $laravelLogging;
+        } else {
+            throw new \UnexpectedValueException ('Config option "cron::laravelLogging" is not a boolean or not equals NULL.');
+        }
+    }
+
+    /**
+     * Enable or disable database logging
      *
      * @static
      * @param  boolean $bool Set to enable or disable database logging
-     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
+     * @throws InvalidArgumentException if the $bool function paramter is not a boolean
      */
     public static function setDatabaseLogging($bool) {
         if (is_bool($bool)) {
             \Config::set('cron::databaseLogging', $bool);
         } else {
-            return false;
+            throw new \InvalidArgumentException('Function paramter $bool with value "' . $bool . '" is not a boolean.');
         }
     }
 
     /**
      * Is logging to database true or false
      * 
+     * @static
      * @return boolean Return boolean which indicates if database logging is true or false
+     * @throws \UnexpectedValueException if the cron::databaseLogging config value is not a boolean  or NULL
      */
     public static function isDatabaseLogging() {
         $databaseLogging = \Config::get('cron::databaseLogging');
-        if (is_bool($databaseLogging)) {
+        if (is_bool($databaseLogging) || is_null($databaseLogging)) {
             return $databaseLogging;
         } else {
-            return null;
+            throw new \UnexpectedValueException ('Config option "cron::databaseLogging" is not a boolean or not equals NULL.');
         }
     }
 
     /**
-     * Enable or disable logging error jobs to database only - start value is true
+     * Enable or disable logging error jobs only to database 
      * NOTE: Works only if database logging is enabled
      *
      * @static
      * @param  boolean $bool Set to enable or disable logging error jobs only
-     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
+     * @throws InvalidArgumentException if the $bool function paramter is not a boolean
      */
     public static function setLogOnlyErrorJobsToDatabase($bool) {
         if (is_bool($bool)) {
             \Config::set('cron::logOnlyErrorJobsToDatabase', $bool);
         } else {
-            return false;
+            throw new \InvalidArgumentException('Function paramter $bool with value "' . $bool . '" is not a boolean.');
         }
     }
 
@@ -392,19 +456,20 @@ class Cron {
      * Is logging jobs to database only true or false
      * 
      * @return boolean Return boolean which indicates if logging only error jobs to database is true or false
+     * @throws \UnexpectedValueException if the cron::logOnlyErrorJobsToDatabase config value is not a boolean or NULL
      */
     public static function isLogOnlyErrorJobsToDatabase() {
         $logOnlyErrorJobsToDatabase = \Config::get('cron::logOnlyErrorJobsToDatabase');
-        if (is_bool($logOnlyErrorJobsToDatabase)) {
+        if (is_bool($logOnlyErrorJobsToDatabase) || is_null($logOnlyErrorJobsToDatabase)) {
             return $logOnlyErrorJobsToDatabase;
         } else {
-            return null;
+            throw new \UnexpectedValueException ('Config option "cron::logOnlyErrorJobsToDatabase" is not a boolean or not equals NULL.');
         }
     }
 
     /**
      * Reset the Cron class
-     * Remove the cons array and the logger object
+     * Remove the cron jobs array and the logger object
      *
      * @static
      */
@@ -418,27 +483,28 @@ class Cron {
      *
      * @static
      * @param  int $minutes Set the interval in minutes
-     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
+     * @throws InvalidArgumentException if the $minutes function paramter is not an integer
      */
     public static function setRunInterval($minutes) {
         if (is_int($minutes)) {
             \Config::set('cron::runInterval', $minutes);
         } else {
-            return false;
+            throw new \InvalidArgumentException('Function paramter $minutes with value "' . $minutes . '" is not an integer.');
         }
     }
 
     /**
      * Get the current run interval value
      * 
-     * @return int|null Return the current interval value in minutes or null if there was no value set or the value type is not equals integer
+     * @return int|null Return the current interval value in minutes or NULL if there is no value set
+     * @throws \UnexpectedValueException if the cron::runInterval config value is not an integer or NULL
      */
     public static function getRunInterval() {
         $interval = \Config::get('cron::runInterval');
-        if (is_int($interval)) {
+        if (is_int($interval) || is_null($interval)) {
             return $interval;
         } else {
-            return null;
+            throw new \UnexpectedValueException ('Config option "cron::runInterval" is not an integer or not equals NULL.');
         }
     }
 
@@ -447,27 +513,28 @@ class Cron {
      *
      * @static
      * @param  int $hours Set the delete time in hours
-     * @return void|false Retun void if value was set successfully or false if there was an problem with the parameter
+     * @throws InvalidArgumentException if the $hours function paramter is not an integer
      */
     public static function setDeleteDatabaseEntriesAfter($hours = 0) {
         if (is_int($hours)) {
             \Config::set('cron::deleteDatabaseEntriesAfter', $hours);
         } else {
-            return false;
+            throw new \InvalidArgumentException('Function paramter $hours with value "' . $hours . '" is not an integer.');
         }
     }
 
     /**
      * Get the current delete time value in hours for old database entries
      * 
-     * @return int|null Return the current delete time value in hours or null if there was no value set or the value type is not equals integer
+     * @return int|null Return the current delete time value in hours or NULL if there was no value set
+     * @throws \UnexpectedValueException if the cron::deleteDatabaseEntriesAfter config value is not an integer or NULL
      */
     public static function getDeleteDatabaseEntriesAfter() {
         $deleteDatabaseEntriesAfter = \Config::get('cron::deleteDatabaseEntriesAfter');
-        if (is_int($deleteDatabaseEntriesAfter)) {
+        if (is_int($deleteDatabaseEntriesAfter) || is_null($deleteDatabaseEntriesAfter)) {
             return $deleteDatabaseEntriesAfter;
         } else {
-            return null;
+            throw new \UnexpectedValueException ('Config option "cron::deleteDatabaseEntriesAfter" is not an integer or not equals NULL.');
         }
     }
 
@@ -475,7 +542,7 @@ class Cron {
      * Delete old manager and job entries
      *
      * @static
-     * @return void|false Retun false if the database was not cleaned successfully or void if the database is cleaned of old enrties
+     * @return void|false Return false if the database was not cleaned successfully or void if the database is cleaned of old entries
      */
     private static function deleteOldDatabaseEntries() {
         // Get the delete after hours value
@@ -516,12 +583,13 @@ class Cron {
      * @static
      * @param  String $jobname The name of the job which should be enabled
      * @param  boolean $enable The trigger for enable (true) or disable (false) the job with the given name
-     * @return void|false Retun void if job was enabled successfully or false if there was an problem with the parameters
+     * @return void|false Return void if job was enabled successfully or false if no job with the $jobname parameter was found
+     * @throws InvalidArgumentException if the $enable function paramter is not a boolean
      */
     public static function setEnableJob($jobname, $enable = true) {
         // Check patameter
         if (!is_bool($enable)) {
-            return false;
+            throw new \InvalidArgumentException('Function paramter $enable with value "' . $enable . '" is not a boolean.');
         }
         
         // Walk through the cron jobs and find the job with the given name
@@ -540,7 +608,7 @@ class Cron {
      *
      * @static
      * @param  String $jobname The name of the job which should be disabled
-     * @return void|false Retun void if job was disabled successfully or false if there was an problem with the parameters
+     * @return void|false Return void if job was disabled successfully or false if no job with the $jobname parameter was found
      */
     public static function setDisableJob($jobname) {
         return self::setEnableJob($jobname, false);
@@ -551,7 +619,7 @@ class Cron {
      *
      * @static
      * @param  String $jobname The name of the job which should be checked
-     * @return void|false Retun boolean if job was enabled (true) or disabled (false) or null if no job with the given name is found
+     * @return void|false Return boolean if job was enabled (true) or disabled (false) or null if no job with the given name is found
      */
     public static function isJobEnabled($jobname) {
         
@@ -563,8 +631,6 @@ class Cron {
             }
         }
         return null;
-        
     }
-
 
 }
