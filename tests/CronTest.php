@@ -61,6 +61,7 @@ class CronTest extends TestCase {
     private function setDefaultConfigValues() {
         \Config::set('cron::runInterval', 1);
         \Config::set('cron::databaseLogging', true);
+        \Config::set('cron::laravelLogging', true);
         \Config::set('cron::logOnlyErrorJobsToDatabase', true);
         \Config::set('cron::deleteDatabaseEntriesAfter', 240);
     }
@@ -258,7 +259,7 @@ class CronTest extends TestCase {
         $this->assertEquals('Return text', $jobs[5]->return);
 
         $this->assertEquals('test7', $jobs[6]->name);
-        $this->assertEquals('Return value of job test7 has the type object - this type cannot be displayed as string (type error)', $jobs[6]->return);
+        $this->assertEquals('Return object type is object', $jobs[6]->return);
     }
 
     /**
@@ -361,9 +362,11 @@ class CronTest extends TestCase {
     /**
      * Test method for adding cron jobs
      *
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage Cron job $name "test2" is not unique and already used.
      * @covers \Liebig\Cron\Cron::add
      */
-    public function testAddCronJob() {
+    public function testAddCronJobWithSameName() {
 
         $i = 0;
         $this->assertEquals(null, Cron::add('test1', '* * * * *', function() use (&$i) {
@@ -382,30 +385,52 @@ class CronTest extends TestCase {
         $this->assertEquals(2, \Liebig\Cron\models\Job::count());
 
         // Should not work - same job name
-        $this->assertEquals(false, Cron::add('test2', '* * * * *', function() use (&$i) {
-                            $i++;
-                            return false;
-                        }));
+        Cron::add('test2', '* * * * *', function() {
+                    return false;
+                });
+    }
+
+    /**
+     * Test method for adding cron jobs
+     *
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage Method argument $expression is not set or invalid.
+     * @covers \Liebig\Cron\Cron::add
+     */
+    public function testAddCronJobWithWrongExpressionOne() {
 
         // Should not work - expression wrong
-        $this->assertEquals(false, Cron::add('test3', 'NOT', function() use (&$i) {
-                            $i++;
-                            return false;
-                        }));
+        Cron::add('test3', 'NOT', function() {
+                    return false;
+                });
+    }
+
+    /**
+     * Test method for adding cron jobs
+     *
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage Method argument $expression is not set or invalid.
+     * @covers \Liebig\Cron\Cron::add
+     */
+    public function testAddCronJobWithWrongExpressionTwo() {
 
         // Should not work - expression wrong (too long)
-        $this->assertEquals(false, Cron::add('test4', '* * * * * * *', function() use (&$i) {
-                            $i++;
-                            return false;
-                        }));
+        Cron::add('test4', '* * * * * * *', function() {
+                    return false;
+                });
+    }
+
+    /**
+     * Test method for adding cron jobs
+     *
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage Method argument $function is not a callable closure.
+     * @covers \Liebig\Cron\Cron::add
+     */
+    public function testAddCronJobWithWrongFunction() {
 
         // Should not work - function is not a function
-        $this->assertEquals(false, Cron::add('test5', '* * * * *', 'This is not a function'));
-
-        Cron::run();
-        $this->assertEquals(4, $i);
-        $this->assertEquals(2, \Liebig\Cron\models\Manager::count());
-        $this->assertEquals(4, \Liebig\Cron\models\Job::count());
+        Cron::add('test5', '* * * * *', 'This is not a function');
     }
 
     /**
@@ -751,7 +776,7 @@ class CronTest extends TestCase {
         $iTest1 = 0;
         $iTest2 = 0;
         $iTest3 = 0;
-        
+
         Cron::add('test1', '* * * * *', function() use (&$iTest1) {
                     $iTest1++;
                     return false;
@@ -783,7 +808,7 @@ class CronTest extends TestCase {
         $this->assertEquals(true, Cron::isJobEnabled('test2'));
         $this->assertEquals(true, Cron::isJobEnabled('test3'));
         $this->assertEquals(null, Cron::isJobEnabled('test4'));
-        
+
         Cron::run();
         $this->assertEquals(2, $iTest1);
         $this->assertEquals(2, $iTest2);
@@ -799,7 +824,7 @@ class CronTest extends TestCase {
         $this->assertEquals(true, Cron::isJobEnabled('test2'));
         $this->assertEquals(false, Cron::isJobEnabled('test3'));
         $this->assertEquals(null, Cron::isJobEnabled('test4'));
-        
+
         Cron::run();
         $this->assertEquals(2, $iTest1);
         $this->assertEquals(3, $iTest2);
@@ -813,7 +838,7 @@ class CronTest extends TestCase {
         $this->assertEquals(false, Cron::isJobEnabled('test2'));
         $this->assertEquals(false, Cron::isJobEnabled('test3'));
         $this->assertEquals(null, Cron::isJobEnabled('test4'));
-        
+
         Cron::run();
         $this->assertEquals(2, $iTest1);
         $this->assertEquals(3, $iTest2);
@@ -827,7 +852,7 @@ class CronTest extends TestCase {
         $this->assertEquals(false, Cron::isJobEnabled('test2'));
         $this->assertEquals(false, Cron::isJobEnabled('test3'));
         $this->assertEquals(null, Cron::isJobEnabled('test4'));
-        
+
         Cron::run();
         $this->assertEquals(3, $iTest1);
         $this->assertEquals(3, $iTest2);
@@ -835,7 +860,7 @@ class CronTest extends TestCase {
         $this->assertEquals(5, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(7, \Liebig\Cron\models\Job::count());
     }
-    
+
     /**
      * Test method for activating and deactivating the logging of all jobs to 
      * Database and testing with full namespace declaration
@@ -849,7 +874,7 @@ class CronTest extends TestCase {
                     $i++;
                     return null;
                 });
-       \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
+        \Liebig\Cron\Cron::add('test2', '* * * * *', function() use (&$i) {
                     $i++;
                     return true;
                 });
@@ -894,6 +919,131 @@ class CronTest extends TestCase {
 
         $this->assertEquals('test3', $jobs2[5]->name);
         $this->assertEquals('false', $jobs2[5]->return);
+    }
+
+    /**
+     * Test method for changing config to an invalid value
+     *
+     * @expectedException        UnexpectedValueException
+     * @expectedExceptionMessage Config option "cron::databaseLogging" is not a boolean or not equals NULL.
+     * @covers \Liebig\Cron\Cron::isDatabaseLogging
+     */
+    public function testWrongConfigValueOne() {
+
+        $this->assertEquals(true, Cron::isDatabaseLogging());
+
+        Config::set('cron::databaseLogging', '');
+        $this->assertEquals(null, Cron::isDatabaseLogging());
+
+        Config::set('cron::databaseLogging', 'true');
+        $this->assertEquals(true, Cron::isDatabaseLogging());
+
+        Config::set('cron::databaseLogging', 'false');
+        $this->assertEquals(false, Cron::isDatabaseLogging());
+
+        Config::set('cron::databaseLogging', 'Not-a-boolean-and-not-null');
+        Cron::isDatabaseLogging();
+    }
+
+    /**
+     * Test method for changing config to an invalid value
+     *
+     * @expectedException        UnexpectedValueException
+     * @expectedExceptionMessage Config option "cron::laravelLogging" is not a boolean or not equals NULL.
+     * @covers \Liebig\Cron\Cron::isLaravelLogging
+     */
+    public function testWrongConfigValueTwo() {
+
+        $this->assertEquals(true, Cron::isLaravelLogging());
+
+        Config::set('cron::laravelLogging', '');
+        $this->assertEquals(null, Cron::isLaravelLogging());
+
+        Config::set('cron::laravelLogging', 'true');
+        $this->assertEquals(true, Cron::isLaravelLogging());
+
+        Config::set('cron::laravelLogging', 'false');
+        $this->assertEquals(false, Cron::isLaravelLogging());
+
+        Config::set('cron::laravelLogging', 12345);
+        Cron::isDatabaseLogging();
+    }
+
+    /**
+     * Test method for setting Laravals build in logging value
+     *
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage Function paramter $bool with value "not a boolean!" is not a boolean.
+     * @covers \Liebig\Cron\Cron::setLaravelLogging
+     * @covers \Liebig\Cron\Cron::isLaravelLogging
+     */
+    public function testSetLaravelLogging() {
+
+        $this->assertEquals(true, Cron::isLaravelLogging());
+        Cron::setLaravelLogging(false);
+        $this->assertEquals(false, Cron::isLaravelLogging());
+        Config::set('cron::laravelLogging', null);
+        $this->assertEquals(null, Cron::isLaravelLogging());
+
+        Cron::setLaravelLogging('not a boolean!');
+    }
+
+    /**
+     * Test method for Laravals build in logging value
+     *
+     * @covers \Liebig\Cron\Cron::setLaravelLogging
+     * @covers \Liebig\Cron\Cron::isLaravelLogging
+     */
+    public function testLaravelLogging() {
+
+        $this->assertEquals(true, Cron::isLaravelLogging());
+        $this->assertEquals(null, Cron::getLogger());
+
+        $i = 0;
+        $tester = $this;
+        Log::listen(function($level, $message) use (&$i, $tester) {
+
+                    switch ($i) {
+                        case 0:
+                            $tester->assertEquals('notice', $level);
+                            $tester->assertEquals('Cron run with manager id 1 has no previous managers.', $message);
+                            break;
+                        case 1:
+                            $tester->assertEquals('info', $level);
+                            $tester->assertEquals('The cron run with the manager id 1 was finished without errors.', $message);
+                            break;
+                        case 2:
+                            $tester->assertEquals('error', $level);
+                            $tester->assertEquals('Job with the name test1 was run with errors.', $message);
+                            break;
+                        case 3:
+                            $tester->assertEquals('error', $level);
+                            break;
+                        case 4:
+                            $tester->assertEquals('error', $level);
+                            $tester->assertEquals('The cron run with the manager id 2 was finished with 1 errors.', $message);
+                            break;
+                        default:
+                            throw new \UnexpectedValueException('Log listener is called to often - test case failed');
+                    }
+
+                    $i++;
+                });
+
+        Cron::run();
+
+        Cron::add('test1', '* * * * *', function() {
+                    return 'test error';
+                });
+
+        Cron::run();
+
+        Cron::setLaravelLogging(false);
+
+        Cron::run();
+
+        // Check if the Log is called 5 times
+        $this->assertEquals(5, $i);
     }
 
 }
