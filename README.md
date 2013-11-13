@@ -11,7 +11,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [|--Remove a cron job](#removejob)
 - [|--Enable / disable a cron job](#enabledisable)
 - [|--Run the cron jobs](#runjob)
-- [|--Enable / Laravel logging](#enablelarvellogging)
+- [|--Enable / disable Laravel logging](#enablelarvellogging)
 - [|--Set a Monolog logger](#setlogger)
 - [|--Disable database logging](#disabledatabaselogging)
 - [|--Log only error jobs to database](#logonlyerrorjobstodatabase)
