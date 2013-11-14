@@ -19,6 +19,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [|--Reset Cron](#reset)
 - [|--Changing default values](#defaultvalues)
 - [Full example](#fullexample)
+- [Changelog](#changelog)
 
 ---
 
@@ -402,6 +403,20 @@ For using `cURL` instead of wget on your server use this code:
 ```
 
 The starting five asterisks are the cron expressions. We want to start our Cron management every minute in this example. The tool `wget` retrieves files using HTTP, HTTPS and FTP. Using the parameter `-O -` causes that the output of the web request will be sent to STDOUT (standard output). `cURL` is a command line tool for getting or sending files using URL syntax. By adding `>/dev/null` we instruct standard output to be redirect to a black hole (/dev/null). By adding `2>&1` we instruct STDERR (standard errors) to also be sent to STDOUT (in this example this is /dev/null). So it will load our website at the Cron route every minute, but never write a file anywhere.
+
+---
+
+<a name="changelog"></a>
+## Changelog
+
+### 12/11/2013 - v0.9.4
+* Added Laravel logging facilities - by default Cron will log to Laravel now
+* Added Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueException now
+* Minor bug fixes
+
+### 01/11/2013 - v0.9.3
+* Added facade for Cron - you can use `Cron` instead of `\Liebig\Cron\Cron` now
+* Added facade test cases
 
 ---
 
