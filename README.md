@@ -171,6 +171,16 @@ public static function run() {
 $report = Cron::run();
 ```
 
+But what if you have two jobs the need to be run every hour (0 * * * \*) but the first one takes 5 minutes to complete?
+
+If you call `Cron::run()` the second job will never execute, because by default each job due time is calculated when each individual job is executed and does not take into account the time on which the `Cron::run()` was called.
+
+To avoid this you need to pass **true** to the run function
+
+```
+$report = Cron::run(true);
+```
+
 **NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval and database logging and the other function calls.
 
 ---
