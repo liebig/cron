@@ -121,7 +121,7 @@ class Cron {
      * @param boolean $checkRuntime When we check if a cronjob is due do we take into account the time when the run function was called or do we take into account the time when each individual cronjob is executed
      * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return value, rundate and runtime)
      */
-    public static function run($checkRuntime = false) {
+    public static function run($checkRuntime = true) {
         // Get the rundate
         $runDate = new \DateTime();
 
@@ -151,11 +151,12 @@ class Cron {
         $beforeAll = microtime(true);
 
         // Should we check if the cron expression is due based on runtime
-        if($checkRuntime)
+        if ($checkRuntime) {
             $checkTime = $runDate;
         // or do we compare it to 'now'
-        else
+        } else {
             $checkTime = 'now';
+        }
 
         // For all defined cron jobs run this
         foreach (self::$cronJobs as $job) {
