@@ -1051,7 +1051,7 @@ class CronTest extends TestCase {
      *
      *  @covers \Liebig\Cron\Cron::run
      */
-    public function testRunMethodWithCheckRuntimeSetToTrue() {
+    public function testRunMethodWithCheckRuntimeDefaultValue() {
 
         $i = 0;
         $minute = date("i");
@@ -1081,7 +1081,7 @@ class CronTest extends TestCase {
      *
      *  @covers \Liebig\Cron\Cron::run
      */
-    public function testRunMethodWithCheckRuntimeDefaultValue() {
+    public function testRunMethodWithCheckRuntimeSetToFalse() {
 
         $i = 0;
         $minute = date("i");
@@ -1100,7 +1100,7 @@ class CronTest extends TestCase {
                     return false;
         });
 
-        Cron::run();
+        Cron::run(false);
         $this->assertEquals(1, $i);
         $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
         $this->assertEquals(0, \Liebig\Cron\models\Job::count());
