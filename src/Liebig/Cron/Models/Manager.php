@@ -1,6 +1,6 @@
 <?php
 
-namespace Liebig\Cron\models;
+namespace Liebig\Cron\Models;
 
 class Manager extends \Eloquent{
     
