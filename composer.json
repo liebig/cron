@@ -18,7 +18,7 @@
     },
     "autoload": {
         "classmap": [
-            "src/migrations"
+            "src/Migrations"
         ],
         "psr-0": {
             "Liebig\\Cron": "src/"
