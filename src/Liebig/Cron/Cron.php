@@ -14,8 +14,6 @@
  */
 
 namespace Liebig\Cron;
-require_once __DIR__ . '/models/job.php';
-require_once __DIR__ . '/models/manager.php';
 
 /**
  * Cron
@@ -130,7 +128,7 @@ class Cron {
         // Getting last run time only if database logging is enabled
         if (self::isDatabaseLogging()) {
             // Get the time (in seconds) between this and the last run and save this to $timeBetween
-            $lastManager = \Liebig\Cron\models\Manager::orderBy('rundate', 'DESC')->take(1)->get();
+            $lastManager = \Liebig\Cron\Models\Manager::orderBy('rundate', 'DESC')->take(1)->get();
             if (!empty($lastManager[0])) {
                 $lastRun = new \DateTime($lastManager[0]->rundate);
                 $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
@@ -184,7 +182,7 @@ class Cron {
         if (self::isDatabaseLogging()) {
 
             // Create a new cronmanager database object for this run and save it
-            $cronmanager = new\Liebig\Cron\models\Manager();
+            $cronmanager = new\Liebig\Cron\Models\Manager();
             $cronmanager->rundate = $runDate;
             $cronmanager->runtime = $afterAll - $beforeAll;
             $cronmanager->save();
@@ -247,7 +245,7 @@ class Cron {
     private static function saveJobsFromArrayToDatabase($jobArray, $managerId) {
 
         foreach ($jobArray as $job) {
-            $jobEntry = new \Liebig\Cron\models\Job();
+            $jobEntry = new \Liebig\Cron\Models\Job();
             $jobEntry->name = $job['name'];
 
             // Get the type of the returned value
@@ -555,7 +553,7 @@ class Cron {
             date_sub($now, date_interval_create_from_date_string($deleteDatabaseEntriesAfter . ' hours'));
 
             // Get the old manager entries which are expired
-            $oldManagers = \Liebig\Cron\models\Manager::where('rundate', '<=', $now->format('Y-m-d H:i:s'))->get();
+            $oldManagers = \Liebig\Cron\Models\Manager::where('rundate', '<=', $now->format('Y-m-d H:i:s'))->get();
 
             foreach ($oldManagers as $manager) {
 

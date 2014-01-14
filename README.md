@@ -411,7 +411,7 @@ The starting five asterisks are the cron expressions. We want to start our Cron 
 
 ### 12/11/2013 - v0.9.4
 * Added Laravel logging facilities - by default Cron will log to Laravel now
-* Added Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueException now
+* Added Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueExceptions now
 * Minor bug fixes
 
 ### 01/11/2013 - v0.9.3

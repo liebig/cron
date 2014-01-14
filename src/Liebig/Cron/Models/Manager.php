@@ -9,7 +9,7 @@ class Manager extends \Eloquent{
     protected $fillable = array('rundate', 'runtime');
     
     public function cronJobs() {
-        return $this->hasMany('\Liebig\Cron\models\Job', 'cron_manager_id');
+        return $this->hasMany('\Liebig\Cron\Models\Job', 'cron_manager_id');
     }
     
     
