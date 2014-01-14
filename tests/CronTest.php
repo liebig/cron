@@ -1046,5 +1046,64 @@ class CronTest extends TestCase {
         $this->assertEquals(5, $i);
     }
 
-}
+    /**
+     *  Test the run method with $checkRunTime = true
+     *
+     *  @covers \Liebig\Cron\Cron::run
+     */
+    public function testRunMethodWithCheckRuntimeDefaultValue() {
 
+        $i = 0;
+        $minute = date("i");
+
+        Cron::add('test1', "$minute * * * *", function() use (&$i) {
+                    $i++;
+                    sleep(60);
+                    return null;
+                });
+        Cron::add('test2', "$minute * * * *", function() use (&$i) {
+                    $i++;
+                    return null;
+                });
+        Cron::add('test3', "$minute * * * *", function() use (&$i) {
+                    $i++;
+                    return false;
+                });
+
+        Cron::run(true);
+        $this->assertEquals(3, $i);
+        $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
+        $this->assertEquals(1, \Liebig\Cron\models\Job::count());
+    }
+
+    /**
+     *  Test the run method with $checkRunTime = false
+     *
+     *  @covers \Liebig\Cron\Cron::run
+     */
+    public function testRunMethodWithCheckRuntimeSetToFalse() {
+
+        $i = 0;
+        $minute = date("i");
+
+        Cron::add('test1', "$minute * * * *", function() use (&$i) {
+                    $i++;
+                    sleep(60);
+                    return null;
+                });
+        Cron::add('test2', "$minute * * * *", function() use (&$i) {
+                    $i++;
+                    return null;
+                });
+        Cron::add('test3', "$minute * * * *", function() use (&$i) {
+                    $i++;
+                    return false;
+        });
+
+        Cron::run(false);
+        $this->assertEquals(1, $i);
+        $this->assertEquals(1, \Liebig\Cron\models\Manager::count());
+        $this->assertEquals(0, \Liebig\Cron\models\Job::count());
+    }
+}
+    
