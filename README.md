@@ -171,7 +171,7 @@ public static function run() {
 $report = Cron::run();
 ```
 
-**NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval and database logging and the other function calls.
+**NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval, database logging and the other function calls.
 
 ---
 
