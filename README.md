@@ -171,7 +171,7 @@ public static function run() {
 $report = Cron::run();
 ```
 
-**NOTE**: The **run** method call must be the last function call after adding jobs, setting the interval, database logging and the other function calls.
+**NOTE**: The **run** method call has to be the last function call after adding jobs, setting the interval, deactivating database logging and the other function calls.
 
 ---
 
@@ -350,7 +350,7 @@ Cron is designed to work out of the box without configuration. To enable this be
 
 #### Set methods
 
-You can use the Cron set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This changes are temporary and the set methods must be called every time before running the **run** method. 
+You can use the Cron set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This changes are temporary and the set methods has to be called every time before running the **run** method. 
 
 #### Config file
 
