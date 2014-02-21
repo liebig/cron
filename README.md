@@ -409,7 +409,7 @@ The starting five asterisks are the cron expressions. We want to start our Cron 
 <a name="changelog"></a>
 ## Changelog
 
-### 2014/01/11 - v0.9.5
+### 2014/02/11 - v0.9.5
 * Bug fixing release
 * Fixing bug with PSR0 Autoloading
 * Fixing time bug - if a job took more than one minute for execution the following jobs were not handled
