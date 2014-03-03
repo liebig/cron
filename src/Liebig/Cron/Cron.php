@@ -55,7 +55,7 @@ class Cron {
      * @static
      * @param  string $name The name for the cron job - has to be unique
      * @param  string $expression The cron job expression (e.g. for every minute: '* * * * *')
-     * @param  function $function The anonymous function which will be executed
+     * @param  Closure $function The anonymous function which will be executed
      * @param  bool $isEnabled optional If the cron job should be enabled or disabled - the standard configuration is enabled
      * @throws InvalidArgumentException if one of the parameters has the wrong data type, is incorrect or is not set
      */
