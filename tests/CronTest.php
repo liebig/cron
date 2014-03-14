@@ -64,6 +64,7 @@ class CronTest extends TestCase {
         \Config::set('cron::laravelLogging', true);
         \Config::set('cron::logOnlyErrorJobsToDatabase', true);
         \Config::set('cron::deleteDatabaseEntriesAfter', 240);
+        \Config::set('cron::preventOverlapping', false);
     }
 
     /**
@@ -1098,12 +1099,93 @@ class CronTest extends TestCase {
         Cron::add('test3', "$minute * * * *", function() use (&$i) {
                     $i++;
                     return false;
-        });
+                });
 
         Cron::run(false);
         $this->assertEquals(1, $i);
         $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
         $this->assertEquals(0, \Liebig\Cron\Models\Job::count());
     }
+
+    /**
+     *  Test the prevent job overlapping functionality
+     *
+     *  @covers \Liebig\Cron\Cron::run
+     * @covers \Liebig\Cron\Cron::setEnablePreventOverlapping
+     * @covers \Liebig\Cron\Cron::setDisablePreventOverlapping
+     * @covers \Liebig\Cron\Cron::isPreventOverlapping
+     */
+    public function testPreventOverlapping() {
+        
+        // Disable database logging because we need this later
+        Cron::setDatabaseLogging(false);
+
+        // Getting storage path with Laravel3 fallback
+        $storagePath = "";
+        if (function_exists('storage_path')) {
+            $storagePath = storage_path();
+        } else if (function_exists('path')) {
+            $storagePath = path('storage');
+        } else {
+            throw new RuntimeException('Could not find the path to Laravels storage directory.');
+        }
+
+        // We disabled this at startup -> have a look at the setDefaultConfigValues method
+        $this->assertEquals(false, Cron::isPreventOverlapping());
+
+        // Enabling prevention
+        Cron::setEnablePreventOverlapping();
+        $this->assertEquals(true, Cron::isPreventOverlapping());
+
+        // Disabling prevention
+        Cron::setDisablePreventOverlapping();
+        $this->assertEquals(false, Cron::isPreventOverlapping());
+        
+        // Sorry, for windows 7 servers unlink and touch does not work
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            return;
+        }
+        
+        // Create a example job which writes to the $lockfileExists variable if a lock file exists
+        $lockfileExists;
+        Cron::add('testlockfile', "* * * * *", function() use (&$lockfileExists, $storagePath) {
+                    if (file_exists($storagePath . 'cron.lock')) {
+                        $lockfileExists = true;
+                    } else {
+                        $lockfileExists = false;
+                    }
+                });
+                
+        Cron::run();
+        $this->assertEquals(false, $lockfileExists);
+        $this->assertEquals(false, file_exists($storagePath . 'cron.lock'));
+        $lockfileExists = "";
+
+        Cron::setEnablePreventOverlapping();
+        $this->assertEquals(true, Cron::isPreventOverlapping());
+        
+        Cron::run();
+        $this->assertEquals(true, $lockfileExists);
+        $this->assertEquals(false, file_exists($storagePath . 'cron.lock'));
+        
+        // Simulate two run calls at the same time
+        touch($storagePath . 'cron.lock');
+        $this->assertEquals(true, file_exists($storagePath . 'cron.lock'));
+        
+        Cron::setDatabaseLogging(false);
+        
+        $lockfileExists = "Not called";
+        $report = Cron::run();
+        $this->assertEquals("Not called", $lockfileExists);
+        $this->assertEquals(-1, $report['runtime']);
+        
+        $newManagerFind = \Liebig\Cron\Models\Manager::find(1);
+        $this->assertNotNull($newManagerFind);
+        $this->assertEquals(-1, $newManagerFind->runtime);
+        
+        unlink($storagePath . 'cron.lock');
+        $this->assertEquals(false, file_exists($storagePath . 'cron.lock'));
+    }
+
 }
-    
+

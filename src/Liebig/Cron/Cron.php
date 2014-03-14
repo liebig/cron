@@ -60,9 +60,9 @@ class Cron {
      * @throws InvalidArgumentException if one of the parameters has the wrong data type, is incorrect or is not set
      */
     public static function add($name, $expression, $function, $isEnabled = true) {
-        
+
         // Check if the given job name is set and is a string
-        if(!isset($name) || !is_string($name)) {
+        if (!isset($name) || !is_string($name)) {
             throw new \InvalidArgumentException('Method argument $name is not set or not a string.');
         }
 
@@ -125,6 +125,57 @@ class Cron {
     public static function run($checkRundateOnce = true) {
         // Get the rundate
         $runDate = new \DateTime();
+
+        // Check if prevent job overlapping is enabled and create lock file if true
+        $preventOverlapping = \Config::get('cron::preventOverlapping');
+        // If a new lock file is created, $overlappingLockFile will be equals the file path
+        $overlappingLockFile = "";
+        if (is_bool($preventOverlapping) && $preventOverlapping) {
+
+            $storagePath = "";
+            // Fallback function for Laravel3 with helper function path('storage')
+            if (function_exists('storage_path')) {
+                $storagePath = storage_path();
+            } else if (function_exists('path')) {
+                $storagePath = path('storage');
+            }
+
+            if (!empty($storagePath)) {
+
+                $lockFile = $storagePath . 'cron.lock';
+
+                if (file_exists($lockFile)) {
+                    self::log('warning', 'Lock file found - Cron is still running and prevent job overlapping is enabled - second Cron run will be terminated.');
+
+                    if (self::isDatabaseLogging()) {
+                        // Create a new cronmanager database object with runtime -1
+                        $cronmanager = new\Liebig\Cron\Models\Manager();
+                        $cronmanager->rundate = $runDate;
+                        $cronmanager->runtime = -1;
+                        $cronmanager->save();
+                    }
+                    return array('rundate' => $runDate->getTimestamp(), 'runtime' => -1);
+                } else {
+
+                    if (is_writable($lockFile)) {
+                        // Create lock file
+                        touch($lockFile);
+
+                        if (!file_exists($lockFile)) {
+                            self::log('error', 'Could not create Cron lock file at ' . $lockFile . '.');
+                        } else {
+                            // Lockfile created successfully
+                            // $overlappingLockFile is used to delete the lock file after Cron run
+                            $overlappingLockFile = $lockFile;
+                        }
+                    } else {
+                        self::log('error', 'Could not create Cron lock file at ' . $lockFile . ' because the file is not writable.');
+                    }
+                }
+            } else {
+                self::log('error', 'Could not get the path to the Laravel storage directory.');
+            }
+        }
 
         // Get the run interval from Laravel config
         $runInterval = self::getRunInterval();
@@ -239,6 +290,24 @@ class Cron {
                 self::log('info', 'Cron run was finished without errors.');
             } else {
                 self::log('error', 'Cron run was finished with ' . count($errorJobs) . ' errors.');
+            }
+        }
+
+        // Removing overlapping lock file if lockfile was created
+        if (!empty($overlappingLockFile)) {
+
+            if (file_exists($overlappingLockFile)) {
+                if (is_writable($overlappingLockFile)) {
+                    unlink($overlappingLockFile);
+
+                    if (file_exists($overlappingLockFile)) {
+                        self::log('critical', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' - please delete this file manually - as long as this lock file exists, Cron will not run.');
+                    }
+                } else {
+                    self::log('critical', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' because it is not writable - please delete this file manually - as long as this lock file exists, Cron will not run.');
+                }
+            } else {
+                self::log('error', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' because file is not found.');
             }
         }
 
@@ -639,7 +708,7 @@ class Cron {
      *
      * @static
      * @param  String $jobname The name of the job which should be checked
-     * @return bool|null Return boolean if job was enabled (true) or disabled (false) or null if no job with the given name is found
+     * @return bool|null Return boolean if job is enabled (true) or disabled (false) or null if no job with the given name is found
      */
     public static function isJobEnabled($jobname) {
 
@@ -651,6 +720,40 @@ class Cron {
             }
         }
         return;
+    }
+
+    /**
+     * Enable prevent job overlapping
+     *
+     * @static
+     */
+    public static function setEnablePreventOverlapping() {
+        \Config::set('cron::preventOverlapping', true);
+    }
+
+    /**
+     * Disable prevent job overlapping
+     *
+     * @static
+     */
+    public static function setDisablePreventOverlapping() {
+        \Config::set('cron::preventOverlapping', false);
+    }
+
+    /**
+     * Is prevent job overlapping is enabled or disabled
+     *
+     * @static
+     * @return bool Return boolean if prevent job overlapping is enabled (true) or disabled (false)
+     */
+    public static function isPreventOverlapping() {
+        $preventOverlapping = \Config::get('cron::preventOverlapping');
+        if (is_bool($preventOverlapping)) {
+            return $preventOverlapping;
+        } else {
+            // If no value or not a boolean value is given, prevent overlapping is disabled
+            return false;
+        }
     }
 
 }

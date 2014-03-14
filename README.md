@@ -16,6 +16,7 @@ Cron can be used for easily performing cron jobs in Laravel without using Artisa
 - [|--Disable database logging](#disabledatabaselogging)
 - [|--Log only error jobs to database](#logonlyerrorjobstodatabase)
 - [|--Delete old database entries](#deleteolddatabaseentries)
+- [|--Prevent overlapping](#preventoverlapping)
 - [|--Reset Cron](#reset)
 - [|--Changing default values](#defaultvalues)
 - [Full example](#fullexample)
@@ -316,6 +317,34 @@ Cron::setDeleteDatabaseEntriesAfter(240);
 #### Getter
 
 To receive the current reference value just use the static `getDeleteDatabaseEntriesAfter` function.
+
+---
+
+<a name="preventoverlapping"></a>
+### Prevent overlapping
+
+Cron can prevent job overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will exectue jobs at the same time. When running a job twice at the same time, side effects can come up. Cron can avoid such overlaps by using simple locking techniques.
+
+```
+public static function setEnablePreventOverlapping() {
+```
+
+#### Example
+
+```
+// The configuration could be set via config.php file with the key 'preventOverlapping' or via method
+Cron::setEnablePreventOverlapping();
+// Now the Cron run will only run once at the same time
+
+Cron::setDisablePreventOverlapping();
+// Prevent overlapping is disabled and many Cron run executions are possible at the same time
+```
+
+#### Getter
+
+To receive the current boolean value just use the static `isPreventOverlapping` function.
+
+**NOTE**: To use the overlapping functionality, Cron needs write access to the Laravel storage directory.
 
 ---
 

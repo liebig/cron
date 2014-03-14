@@ -17,4 +17,7 @@ return array(
     // Delte old database entries after how many hours
     'deleteDatabaseEntriesAfter' => 240,
     
+    // Prevent job overlapping - if Cron is still running it could not be started a second time
+    'preventOverlapping' => true
+    
 );
