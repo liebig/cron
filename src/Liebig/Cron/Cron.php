@@ -157,19 +157,15 @@ class Cron {
                     return array('rundate' => $runDate->getTimestamp(), 'runtime' => -1);
                 } else {
 
-                    if (is_writable($lockFile)) {
-                        // Create lock file
-                        touch($lockFile);
+                    // Create lock file
+                    touch($lockFile);
 
-                        if (!file_exists($lockFile)) {
-                            self::log('error', 'Could not create Cron lock file at ' . $lockFile . '.');
-                        } else {
-                            // Lockfile created successfully
-                            // $overlappingLockFile is used to delete the lock file after Cron run
-                            $overlappingLockFile = $lockFile;
-                        }
+                    if (!file_exists($lockFile)) {
+                        self::log('error', 'Could not create Cron lock file at ' . $lockFile . '.');
                     } else {
-                        self::log('error', 'Could not create Cron lock file at ' . $lockFile . ' because the file is not writable.');
+                        // Lockfile created successfully
+                        // $overlappingLockFile is used to delete the lock file after Cron run
+                        $overlappingLockFile = $lockFile;
                     }
                 }
             } else {
