@@ -1149,7 +1149,7 @@ class CronTest extends TestCase {
         // Create a example job which writes to the $lockfileExists variable if a lock file exists
         $lockfileExists;
         Cron::add('testlockfile', "* * * * *", function() use (&$lockfileExists, $storagePath) {
-                    if (file_exists($storagePath . 'cron.lock')) {
+                    if (file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock')) {
                         $lockfileExists = true;
                     } else {
                         $lockfileExists = false;
@@ -1158,7 +1158,7 @@ class CronTest extends TestCase {
                 
         Cron::run();
         $this->assertEquals(false, $lockfileExists);
-        $this->assertEquals(false, file_exists($storagePath . 'cron.lock'));
+        $this->assertEquals(false, file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock'));
         $lockfileExists = "";
 
         Cron::setEnablePreventOverlapping();
@@ -1166,11 +1166,11 @@ class CronTest extends TestCase {
         
         Cron::run();
         $this->assertEquals(true, $lockfileExists);
-        $this->assertEquals(false, file_exists($storagePath . 'cron.lock'));
+        $this->assertEquals(false, file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock'));
         
         // Simulate two run calls at the same time
-        touch($storagePath . 'cron.lock');
-        $this->assertEquals(true, file_exists($storagePath . 'cron.lock'));
+        touch($storagePath . DIRECTORY_SEPARATOR . 'cron.lock');
+        $this->assertEquals(true, file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock'));
         
         Cron::setDatabaseLogging(false);
         
@@ -1183,8 +1183,8 @@ class CronTest extends TestCase {
         $this->assertNotNull($newManagerFind);
         $this->assertEquals(-1, $newManagerFind->runtime);
         
-        unlink($storagePath . 'cron.lock');
-        $this->assertEquals(false, file_exists($storagePath . 'cron.lock'));
+        unlink($storagePath . DIRECTORY_SEPARATOR . 'cron.lock');
+        $this->assertEquals(false, file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock'));
     }
 
 }

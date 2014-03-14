@@ -142,7 +142,7 @@ class Cron {
 
             if (!empty($storagePath)) {
 
-                $lockFile = $storagePath . 'cron.lock';
+                $lockFile = $storagePath . DIRECTORY_SEPARATOR . 'cron.lock';
 
                 if (file_exists($lockFile)) {
                     self::log('warning', 'Lock file found - Cron is still running and prevent job overlapping is enabled - second Cron run will be terminated.');
