@@ -1172,7 +1172,7 @@ class CronTest extends TestCase {
         touch($storagePath . DIRECTORY_SEPARATOR . 'cron.lock');
         $this->assertEquals(true, file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock'));
         
-        Cron::setDatabaseLogging(false);
+        Cron::setDatabaseLogging(true);
         
         $lockfileExists = "Not called";
         $report = Cron::run();
