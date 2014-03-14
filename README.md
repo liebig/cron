@@ -323,7 +323,7 @@ To receive the current reference value just use the static `getDeleteDatabaseEnt
 <a name="preventoverlapping"></a>
 ### Prevent overlapping
 
-Cron can prevent job overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will exectue jobs at the same time. When running a job twice at the same time, side effects can come up. Cron can avoid such overlaps by using simple locking techniques.
+Cron can prevent job overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will execute jobs at the same time. When running a job twice at the same time, side effects can come up. Cron can avoid such overlaps by using simple locking techniques.
 
 ```
 public static function setEnablePreventOverlapping() {
