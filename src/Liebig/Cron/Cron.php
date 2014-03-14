@@ -216,7 +216,12 @@ class Cron {
                 $beforeOne = microtime(true);
 
                 // Run the function and save the return to $return - all the magic goes here
-                $return = $job['function']();
+                try {
+                    $return = $job['function']();
+                } catch (Exception $e) {
+                    // If an uncatched  exception occurs
+                    $return = 'Exception in job ' . $job['name'] . ': ' . $e->getMessage();
+                }
 
                 // Get the end time of the job runtime
                 $afterOne = microtime(true);
