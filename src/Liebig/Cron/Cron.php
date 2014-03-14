@@ -218,7 +218,7 @@ class Cron {
                 // Run the function and save the return to $return - all the magic goes here
                 try {
                     $return = $job['function']();
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     // If an uncatched  exception occurs
                     $return = 'Exception in job ' . $job['name'] . ': ' . $e->getMessage();
                 }
