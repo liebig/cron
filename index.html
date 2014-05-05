@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Cron : Job scheduling for Laravel" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Cron</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/liebig/cron">View on GitHub</a>
+
+          <h1 id="project_title">Cron</h1>
+          <h2 id="project_tagline">Job scheduling for Laravel</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/liebig/cron/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/liebig/cron/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="-cron-" class="anchor" href="#-cron-"><span class="octicon octicon-link"></span></a><img src="https://raw.github.com/liebig/cron/master/icon.png" alt="alt text" title="Cron"> Cron <img src="http://stillmaintained.com/liebig/cron.png" alt="project status">
+</h1>
+
+<p>Job scheduling for Laravel</p>
+
+<p>Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the error jobs into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  </p>
+
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#addjob">|--Add a cron job</a></li>
+<li><a href="#removejob">|--Remove a cron job</a></li>
+<li><a href="#enabledisable">|--Enable / disable a cron job</a></li>
+<li><a href="#runjob">|--Run the cron jobs</a></li>
+<li><a href="#enablelarvellogging">|--Enable / disable Laravel logging</a></li>
+<li><a href="#setlogger">|--Set a Monolog logger</a></li>
+<li><a href="#disabledatabaselogging">|--Disable database logging</a></li>
+<li><a href="#logonlyerrorjobstodatabase">|--Log only error jobs to database</a></li>
+<li><a href="#deleteolddatabaseentries">|--Delete old database entries</a></li>
+<li><a href="#preventoverlapping">|--Prevent overlapping</a></li>
+<li><a href="#reset">|--Reset Cron</a></li>
+<li><a href="#defaultvalues">|--Changing default values</a></li>
+<li><a href="#fullexample">Full example</a></li>
+<li><a href="#changelog">Changelog</a></li>
+</ul><hr><p><a name="overview"></a></p>
+
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p>You have to</p>
+
+<ul>
+<li>  ... download this package</li>
+<li>  ... define a route with all cron job definitions, closing with the <code>run()</code> method call</li>
+<li>  ... buy or rent a server or service which call the defined cron route every predefined number of minutes (default is every minute) as normal a web request (e.g. with wget)</li>
+</ul><p>You don't have to</p>
+
+<ul>
+<li>  ... create Artisan commands</li>
+<li>  ... own shell access to your server</li>
+<li>  ... run the regular cron route requests on the same machine where your Laravel site is located</li>
+<li>  ... worry about (cron) job management anymore</li>
+</ul><p><strong>NOTE</strong>: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.</p>
+
+<hr><p><a name="installation"></a></p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<ol>
+<li> Add <code>"liebig/cron": "dev-master"</code> to your <code>/laravel/composer.json</code> file at the <code>"require":</code> section (Find more about composer at <a href="http://getcomposer.org/">http://getcomposer.org/</a>)</li>
+<li> Run the <code>composer update --no-dev</code> command in your shell from your <code>/laravel/</code> directory </li>
+<li> Add <code>'Liebig\Cron\CronServiceProvider'</code> to your <code>'providers'</code> array in the <code>app\config\app.php</code> file</li>
+<li> Migrate the database with running the command <code>php artisan migrate --package="liebig/cron"</code>
+</li>
+<li> Publish the configuration file with running the command <code>php artisan config:publish liebig/cron</code> - now you find the Cron configuration file in <code>/laravel/app/config/packages/liebig/cron</code> and this file won't be overwritten at any update</li>
+<li> Now you can use <code>Cron</code> everywhere for free</li>
+</ol><p><strong>NOTE</strong>: Since version v0.9.3 you can use <code>Cron</code> instead of <code>\Liebig\Cron\Cron</code></p>
+
+<hr><p><a name="usage"></a></p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p><a name="addjob"></a></p>
+
+<h3>
+<a name="add-a-cron-job" class="anchor" href="#add-a-cron-job"><span class="octicon octicon-link"></span></a>Add a cron job</h3>
+
+<p>Adding a cron job to Cron is very easy by using the static <strong>add</strong> function. As parameter the <strong>name</strong> of the cron job, the cron <strong>expression</strong> and an anonymous <strong>function</strong> is needed. The boolean <strong>isEnabled</strong> is optional and can enable or disable this cron job execution (default is enabled).</p>
+
+<pre><code>public static function add($name, $expression, $function, $isEnabled = true) {
+</code></pre>
+
+<p>The <strong>name</strong> is needed for identifying a cron job if an error appears and for logging.</p>
+
+<p>The <strong>expression</strong> is a string of five or optional six subexpressions that describe details of the schedule. The syntax is based on the Linux cron daemon definition.</p>
+
+<pre><code>    *    *    *    *    *    *
+    -    -    -    -    -    -
+    |    |    |    |    |    |
+    |    |    |    |    |    + year [optional]
+    |    |    |    |    +----- day of week (0 - 7) (Sunday=0 or 7)
+    |    |    |    +---------- month (1 - 12)
+    |    |    +--------------- day of month (1 - 31)
+    |    +-------------------- hour (0 - 23)
+    +------------------------- min (0 - 59)
+</code></pre>
+
+<p>The given anonymous <strong>function</strong> will be invoked if the expression details match with the current timestamp. This function should return null in the case of success or anything else if there was an error while executing this job. By default, the error case will be logged to the database and to a Monolog logger object (if logger is enabled). </p>
+
+<p>The <strong>isEnabled</strong> boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easily by giving a true boolean to the method. This parameter is optional and the default value is enabled.</p>
+
+<h4>
+<a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
+Cron::add('example2', '*/2 * * * *', function() {
+                    // Oh no, this job has errors and runs every two minutes
+                    return false;
+                }, true);
+</code></pre>
+
+<hr><p><a name="removejob"></a></p>
+
+<h3>
+<a name="remove-a-cron-job" class="anchor" href="#remove-a-cron-job"><span class="octicon octicon-link"></span></a>Remove a cron job</h3>
+
+<p>To remove a set cron job on runtime use the <strong>remove</strong> method with the cron job name as string parameter.</p>
+
+<pre><code>public static function remove($name) {
+</code></pre>
+
+<h4>
+<a name="example-1" class="anchor" href="#example-1"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
+Cron::remove('example1');
+</code></pre>
+
+<hr><p><a name="enabledisable"></a></p>
+
+<h3>
+<a name="enable-or-disable-a-cron-job" class="anchor" href="#enable-or-disable-a-cron-job"><span class="octicon octicon-link"></span></a>Enable or disable a cron job</h3>
+
+<p>After adding an enabled or disabled cron job ($isEnabled boolean parameter of the add method call) you can disable or enable a cron job by name. For this use the <strong>setEnableJob</strong> or <strong>setDisableJob</strong> function.</p>
+
+<pre><code>public static function setEnableJob($jobname, $enable = true) {
+</code></pre>
+
+<pre><code>public static function setDisableJob($jobname) {
+</code></pre>
+
+<h4>
+<a name="example-2" class="anchor" href="#example-2"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
+Cron::setDisableJob('example1');
+// No jobs will be called
+$report = Cron::run();
+Cron::setEnableJob('example1');
+// One job will be called
+$report = Cron::run();
+</code></pre>
+
+<h4>
+<a name="getter" class="anchor" href="#getter"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To receive the enable status boolean of a job, use the static <code>isJobEnabled($jobname)</code> method.</p>
+
+<hr><p><a name="runjob"></a></p>
+
+<h3>
+<a name="run-the-cron-jobs" class="anchor" href="#run-the-cron-jobs"><span class="octicon octicon-link"></span></a>Run the cron jobs</h3>
+
+<p>Running the cron jobs is as easy as adding them. Just call the static <strong>run</strong> method and wait until each added cron job expression is checked. As soon as the time of the expression has come, the corresponding cron job will be invoked. That is the Cron magic. The <strong>run</strong> method returns a detailed report. By default Cron reckons that you call this method every minute (* * * * *) and by default the report (with their cron jobs errors) will be logged to database. You can change this interval using the <code>setRunInterval</code> function.</p>
+
+<pre><code>public static function run() {
+</code></pre>
+
+<h4>
+<a name="example-3" class="anchor" href="#example-3"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>$report = Cron::run();
+</code></pre>
+
+<p><strong>NOTE</strong>: The <strong>run</strong> method call has to be the last function call after adding jobs, setting the interval, deactivating database logging and the other function calls.</p>
+
+<hr><h3>
+<a name="set-the-run-interval" class="anchor" href="#set-the-run-interval"><span class="octicon octicon-link"></span></a>Set the run interval</h3>
+
+<p>The run interval is the time between two cron job route calls. Some cron service provider only supports calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.</p>
+
+<pre><code>public static function setRunInterval($minutes) {
+</code></pre>
+
+<p><strong>NOTE</strong>: If the route call interval is not every minute you have to adjust your cron job expressions to fit to this interval.</p>
+
+<h4>
+<a name="example-4" class="anchor" href="#example-4"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>// Set the run intervall to 15 minutes
+Cron::setRunInterval(15);
+// Or set the run intervall to 30 minutes
+Cron::setRunInterval(30);
+</code></pre>
+
+<h4>
+<a name="getter-1" class="anchor" href="#getter-1"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To recieve the current set run interval use the static <code>getRunInterval()</code> method.</p>
+
+<hr><p><a name="enablelarvellogging"></a></p>
+
+<h3>
+<a name="enable-or-disable-laravel-logging" class="anchor" href="#enable-or-disable-laravel-logging"><span class="octicon octicon-link"></span></a>Enable or disable Laravel logging</h3>
+
+<p>The Laravel logging facilities provide a layer on top of Monolog. By default, Laravel is configured to create daily log files for your application, and these files are stored in <code>app/storage/logs</code>. Cron will use Laravel logging facilities by default. You can disable this by setting the <code>laravelLogging</code> config.php value to false or call at runtime the <strong>setLaravelLogging</strong> function.</p>
+
+<pre><code>public static function setLaravelLogging($bool) {
+</code></pre>
+
+<p><strong>NOTE</strong>: You can add a custom Monolog logger to Cron and enable Laravel logging. In this case all messages will be logged to Laravel and to your custom Monolog logger object.</p>
+
+<h4>
+<a name="example-5" class="anchor" href="#example-5"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>// Laravel logging is enabled by default
+Cron::run();
+// Disable Laravel logging
+Cron::setLaravelLogging(false);
+// Laravel logging is disabled
+Cron::run();
+</code></pre>
+
+<h4>
+<a name="getter-2" class="anchor" href="#getter-2"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To recieve the enabled or disabled boolean value use the static <code>isLaravelLogging()</code> method.</p>
+
+<hr><p><a name="setlogger"></a></p>
+
+<h3>
+<a name="set-a-monolog-logger" class="anchor" href="#set-a-monolog-logger"><span class="octicon octicon-link"></span></a>Set a Monolog logger</h3>
+
+<p>If you want to add a custom Monolog logger object to Cron use the static <strong>setLogger</strong> method.</p>
+
+<pre><code>public static function setLogger(\Monolog\Logger $logger = null) {
+</code></pre>
+
+<p><strong>NOTE</strong>: If you want to remove the logger, just call the <strong>setLogger</strong> method without parameters.</p>
+
+<h4>
+<a name="example-6" class="anchor" href="#example-6"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>Cron::setLogger(new \Monolog\Logger('cronLogger'));
+// And remove the logger again
+Cron::setLogger();
+</code></pre>
+
+<h4>
+<a name="getter-3" class="anchor" href="#getter-3"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To recieve the set logger object use the static <code>getLogger()</code> method. If no logger object is set, null will be returned. </p>
+
+<hr><p><a name="disabledatabaselogging"></a></p>
+
+<h3>
+<a name="disable-database-logging" class="anchor" href="#disable-database-logging"><span class="octicon octicon-link"></span></a>Disable database logging</h3>
+
+<p>By default database logging is enabled and after each cron run a manager object and job objects will be saved to database. We strongly recommend to keep the database logging activated because only with this option Cron can check if the current run is in time. It could make sense in some cases to deactivate the database logging with the <strong>setDatabaseLogging</strong> method.</p>
+
+<pre><code>public static function setDatabaseLogging($bool) {
+</code></pre>
+
+<h4>
+<a name="example-7" class="anchor" href="#example-7"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>Cron::setDatabaseLogging(false);
+</code></pre>
+
+<h4>
+<a name="getter-4" class="anchor" href="#getter-4"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To receive the current boolean value of the logging to database variable, just use the static <code>isDatabaseLogging()</code> function.</p>
+
+<hr><p><a name="logonlyerrorjobstodatabase"></a></p>
+
+<h3>
+<a name="log-only-error-jobs-to-database" class="anchor" href="#log-only-error-jobs-to-database"><span class="octicon octicon-link"></span></a>Log only error jobs to database</h3>
+
+<p>By default Cron will only log error jobs (which not return null) to database. Maybe you want to log all run jobs to database by using the static <strong>setLogOnlyErrorJobsToDatabase</strong> function. </p>
+
+<pre><code>public static function setLogOnlyErrorJobsToDatabase($bool) {
+</code></pre>
+
+<h4>
+<a name="example-8" class="anchor" href="#example-8"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>// Log all jobs (not only the error jobs) to database
+Cron::setLogOnlyErrorJobsToDatabase(false);
+</code></pre>
+
+<h4>
+<a name="getter-5" class="anchor" href="#getter-5"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To receive the current boolean value of the logging only error jobs to database variable, just use the static <code>isLogOnlyErrorJobsToDatabase()</code> function.</p>
+
+<hr><p><a name="deleteolddatabaseentries"></a></p>
+
+<h3>
+<a name="delete-old-database-entries" class="anchor" href="#delete-old-database-entries"><span class="octicon octicon-link"></span></a>Delete old database entries</h3>
+
+<p>Cron can delete old database entries for you. During each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the <strong>setDeleteDatabaseEntriesAfter</strong> function. The default value is 240 hours (10 days). To disable the deletion of old entries just set the reference value to 0.</p>
+
+<pre><code>public static function setDeleteDatabaseEntriesAfter($hours) {
+</code></pre>
+
+<h4>
+<a name="example-9" class="anchor" href="#example-9"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>// Set the delete database entries reference value to 10 days (24 hours x 10 days)
+Cron::setDeleteDatabaseEntriesAfter(240);
+</code></pre>
+
+<h4>
+<a name="getter-6" class="anchor" href="#getter-6"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To receive the current reference value just use the static <code>getDeleteDatabaseEntriesAfter</code> function.</p>
+
+<hr><p><a name="preventoverlapping"></a></p>
+
+<h3>
+<a name="prevent-overlapping" class="anchor" href="#prevent-overlapping"><span class="octicon octicon-link"></span></a>Prevent overlapping</h3>
+
+<p>Cron can prevent job overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will execute jobs at the same time. When running a job twice at the same time, side effects can come up. Cron can avoid such overlaps by using simple locking techniques.</p>
+
+<pre><code>public static function setEnablePreventOverlapping() {
+</code></pre>
+
+<h4>
+<a name="example-10" class="anchor" href="#example-10"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>// The configuration could be set via config.php file with the key 'preventOverlapping' or via method
+Cron::setEnablePreventOverlapping();
+// Now the Cron run will only run once at the same time
+
+Cron::setDisablePreventOverlapping();
+// Prevent overlapping is disabled and many Cron run executions are possible at the same time
+</code></pre>
+
+<h4>
+<a name="getter-7" class="anchor" href="#getter-7"><span class="octicon octicon-link"></span></a>Getter</h4>
+
+<p>To receive the current boolean value just use the static <code>isPreventOverlapping</code> function.</p>
+
+<p><strong>NOTE</strong>: To use the overlapping functionality, Cron needs write access to the Laravel storage directory.</p>
+
+<hr><p><a name="reset"></a></p>
+
+<h3>
+<a name="reset-cron" class="anchor" href="#reset-cron"><span class="octicon octicon-link"></span></a>Reset Cron</h3>
+
+<p>To reset the cron management, call the static <strong>reset</strong> method. It will reset all variables to the default values.</p>
+
+<pre><code>public static function reset() {
+</code></pre>
+
+<h4>
+<a name="example-11" class="anchor" href="#example-11"><span class="octicon octicon-link"></span></a>Example</h4>
+
+<pre><code>Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things successfully every minute
+                    return null;
+                });
+Cron::setLogger(new \Monolog\Logger('cronLogger'));
+Cron::reset();
+// Cron::remove('example1') === false
+// Cron::getLogger() === NULL
+</code></pre>
+
+<hr><p><a name="defaultvalues"></a></p>
+
+<h3>
+<a name="changing-default-values" class="anchor" href="#changing-default-values"><span class="octicon octicon-link"></span></a>Changing default values</h3>
+
+<p>Cron is designed to work out of the box without configuration. To enable this behaviour a few default values are set. To change Crons default settings there are two possibilities.</p>
+
+<h4>
+<a name="set-methods" class="anchor" href="#set-methods"><span class="octicon octicon-link"></span></a>Set methods</h4>
+
+<p>You can use the Cron set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This changes are temporary and the set methods has to be called every time before running the <strong>run</strong> method. </p>
+
+<h4>
+<a name="config-file" class="anchor" href="#config-file"><span class="octicon octicon-link"></span></a>Config file</h4>
+
+<p>The behaviour values will be loaded from a Cron config file. You can change this values easily by editing the <code>src/config/config.php</code> file. This is the more permanent way. If you only want to change settings for one run, we recommend to use the setter methods.</p>
+
+<hr><p><a name="fullexample"></a></p>
+
+<h2>
+<a name="full-example" class="anchor" href="#full-example"><span class="octicon octicon-link"></span></a>Full example</h2>
+
+<p>At first we create a route which should be called in a defined interval.</p>
+
+<p><strong>NOTE</strong>: We have to protect this route because if someone calls this uncontrolled, our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.</p>
+
+<pre><code>Route::get('/Cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
+
+});
+</code></pre>
+
+<p>Now we can add our cron jobs to this route and of course call the run method. At the end we print out the report.</p>
+
+<pre><code>Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
+    Cron::add('example1', '* * * * *', function() {
+                        // Do some crazy things every minute
+                        return null;
+                    });
+    Cron::add('example2', '*/2 * * * *', function() {
+                        // Do some crazy things every two minutes
+                        return null;
+                    });
+    $report = Cron::run();
+    print_r ($report);
+});
+</code></pre>
+
+<p>And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google knows many good providers. An online cronjob service overview can be found at <a href="http://www.cronjobservices.com/">http://www.cronjobservices.com/</a></p>
+
+<p>To configure a <code>wget</code> web request by using <code>crontab -e</code> or a control panel software (e.g. cPanel or Plesk) on an own (virtual) server use the following code:</p>
+
+<pre><code>* * * * * wget -O - http://yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf &gt;/dev/null 2&gt;&amp;1
+</code></pre>
+
+<p>For using <code>cURL</code> instead of wget on your server use this code:</p>
+
+<pre><code>* * * * * curl "http://yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf" &gt;/dev/null 2&gt;&amp;1
+</code></pre>
+
+<p>The starting five asterisks are the cron expressions. We want to start our Cron management every minute in this example. The tool <code>wget</code> retrieves files using HTTP, HTTPS and FTP. Using the parameter <code>-O -</code> causes that the output of the web request will be sent to STDOUT (standard output). <code>cURL</code> is a command line tool for getting or sending files using URL syntax. By adding <code>&gt;/dev/null</code> we instruct standard output to be redirect to a black hole (/dev/null). By adding <code>2&gt;&amp;1</code> we instruct STDERR (standard errors) to also be sent to STDOUT (in this example this is /dev/null). So it will load our website at the Cron route every minute, but never write a file anywhere.</p>
+
+<hr><p><a name="changelog"></a></p>
+
+<h2>
+<a name="changelog" class="anchor" href="#changelog"><span class="octicon octicon-link"></span></a>Changelog</h2>
+
+<h3>
+<a name="20140211---v095" class="anchor" href="#20140211---v095"><span class="octicon octicon-link"></span></a>2014/02/11 - v0.9.5</h3>
+
+<ul>
+<li>Bug fixing release</li>
+<li>Fixing bug with PSR0 Autoloading</li>
+<li>Fixing time bug - if a job took more than one minute for execution the following jobs were not handled</li>
+</ul><h3>
+<a name="20131112---v094" class="anchor" href="#20131112---v094"><span class="octicon octicon-link"></span></a>2013/11/12 - v0.9.4</h3>
+
+<ul>
+<li>Added Laravel logging facilities - by default Cron will log to Laravel now</li>
+<li>Added Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueExceptions now</li>
+<li>Minor bug fixes</li>
+</ul><h3>
+<a name="20131101---v093" class="anchor" href="#20131101---v093"><span class="octicon octicon-link"></span></a>2013/11/01 - v0.9.3</h3>
+
+<ul>
+<li>Added facade for Cron - you can use <code>Cron</code> instead of <code>\Liebig\Cron\Cron</code> now</li>
+<li>Added facade test cases</li>
+</ul><hr><h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>The MIT License (MIT)</p>
+
+<p>Copyright (c) 2014 Marc Liebig</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+
+<p>Icon Copyright (c) Timothy Miller (<a href="http://www.iconfinder.com/icondetails/171279/48/alarm_bell_clock_time_icon">http://www.iconfinder.com/icondetails/171279/48/alarm_bell_clock_time_icon</a>) under Creative Commons (Attribution-Share Alike 3.0 Unported) License - Thank you for this awesome icon</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Cron maintained by <a href="https://github.com/liebig">liebig</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
