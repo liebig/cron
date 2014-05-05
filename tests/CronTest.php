@@ -36,10 +36,10 @@ class CronTest extends TestCase {
         $this->setDefaultConfigValues();
 
         // Migrate all database tables
-        \Artisan::call('migrate', array('--package' => 'liebig/cron'));
+        \Artisan::call('migrate', array('--bench' => 'liebig/cron'));
 
         // Set the path to logfile to the laravel storage / logs / directory as test.txt file
-        // NOTE: THIS FILE MUST BE DELETED EACH TIME AFTER THE UNIT TEST WAS STARTED
+        // NOTE: THIS FILE HAS TO BE DELETED EACH TIME AFTER THE UNIT TEST WAS STARTED
         $this->pathToLogfile = storage_path() . '/logs/test.txt';
     }
 
@@ -1186,6 +1186,84 @@ class CronTest extends TestCase {
         unlink($storagePath . DIRECTORY_SEPARATOR . 'cron.lock');
         $this->assertEquals(false, file_exists($storagePath . DIRECTORY_SEPARATOR . 'cron.lock'));
     }
+    
+    /**
+     *  Test the try-catch-block of the job execution call
+     *
+     *  @covers \Liebig\Cron\Cron::run
+     */
+    public function testCatchJobException() {
+        
+        Cron::add('exception1', "* * * * *", function() {
+                    throw new \Exception('Test Exception.');
+                    return false;
+                });
 
+        Cron::run();
+        
+        $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
+        
+        $jobs = \Liebig\Cron\Models\Job::all();
+        $this->assertEquals(1, count($jobs));
+
+        $this->assertEquals('exception1', $jobs[0]->name);
+        $this->assertEquals('Exception in job exception1: Test Exception.', $jobs[0]->return);
+        
+    }
+    
+    /**
+     *  Tests the Cron run events
+     *
+     *  @covers \Liebig\Cron\Cron::run
+     */
+    public function testRunEvents() {
+        
+        $result = array();
+        
+        \Event::listen('cron.afterRun', function($jobArray) use (&$result) {
+
+            array_push($result, $jobArray);
+        });
+        
+        \Event::listen('cron.collectJobs', function($runDate) use (&$result) {
+            sleep(2);
+            $now = new \DateTime();
+            
+            if(empty($runDate) || !is_int($runDate) || $runDate > $now->getTimestamp()) {
+                throw new \Exception('$runDate with value ' . $runDate . ' should not be empty, has to be an integer value and has to be lower then the current timestamp');
+            }
+            array_push($result, "Collect");
+            
+            Cron::add('test1', "* * * * *", function() use (&$result) {
+                    array_push($result, 'Job');
+                    return 'No';
+                });
+        });
+        
+        \Event::listen('cron.beforeRun', function($runDate) use (&$result) {
+            sleep(2);
+            $now = new \DateTime();
+            
+            if(empty($runDate) || !is_int($runDate) || $runDate > $now->getTimestamp()) {
+                throw new \Exception('$runDate with value ' . $runDate . ' should not be empty, has to be an integer value and has to be lower then the current timestamp');
+            }
+            array_push($result, 'Before');
+        });
+        
+        Cron::run();
+        $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
+        $this->assertEquals(1, \Liebig\Cron\Models\Job::count());
+        
+        $this->assertEquals('Before', $result[0]);
+        $this->assertEquals('Collect', $result[1]);
+        $this->assertEquals('Job', $result[2]);
+        $this->assertEquals(true, is_array($result[3]));
+        
+        $this->assertEquals(1, $result[3]['errors']);
+        $this->assertEquals('test1', $result[3]['crons'][0]['name']);
+        $this->assertEquals('No', $result[3]['crons'][0]['return']);
+    }
+    
+    
 }
 
