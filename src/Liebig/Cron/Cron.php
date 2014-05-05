@@ -125,6 +125,9 @@ class Cron {
     public static function run($checkRundateOnce = true) {
         // Get the rundate
         $runDate = new \DateTime();
+        
+        // Fire event before the Cron run will be executed
+        \Event::fire('cron.beforeRun', array($runDate->getTimestamp()));
 
         // Check if prevent job overlapping is enabled and create lock file if true
         $preventOverlapping = \Config::get('cron::preventOverlapping');
@@ -192,6 +195,9 @@ class Cron {
             // Cannot check if the cron run is in time
             $inTime = -1;
         }
+        
+        // Fire event before the Cron jobs will be executed
+        \Event::fire('cron.collectJobs', array($runDate->getTimestamp()));
 
         // Initialize the job and job error array and start the runtime calculation
         $allJobs = array();
@@ -251,20 +257,25 @@ class Cron {
             $cronmanager->runtime = $afterAll - $beforeAll;
             $cronmanager->save();
 
-            $inTime = false;
-            // Check if the run between this and the last run is in time (30 seconds tolerance) and log this event
-            if ($timeBetween === -1) {
-                self::log('notice', 'Cron run with manager id ' . $cronmanager->id . ' has no previous managers.');
-                $inTime = -1;
-            } elseif (($runInterval * 60) - $timeBetween < -30) {
-                self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+            // If the Cron run in time check is enabled, verify the time between the current and the last Cron run ($timeBetween) and compare it with the run interval
+            if (self::isInTimeCheck()) {
                 $inTime = false;
-            } elseif (($runInterval * 60) - $timeBetween > 30) {
-                self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
-                $inTime = false;
+                // Check if the run between this and the last run is in time (30 seconds tolerance) and log this event
+                if ($timeBetween === -1) {
+                    self::log('notice', 'Cron run with manager id ' . $cronmanager->id . ' has no previous managers.');
+                    $inTime = -1;
+                } elseif (($runInterval * 60) - $timeBetween < -30) {
+                    self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+                    $inTime = false;
+                } elseif (($runInterval * 60) - $timeBetween > 30) {
+                    self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
+                    $inTime = false;
+                } else {
+                    self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
+                    $inTime = true;
+                }
             } else {
-                self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
-                $inTime = true;
+                $inTime = -1;
             }
 
             if (self::isLogOnlyErrorJobsToDatabase()) {
@@ -311,9 +322,14 @@ class Cron {
                 self::log('error', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' because file is not found.');
             }
         }
+        
+        $returnArray = array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
+        
+        // Fire event after the Cron run was executed
+        \Event::fire('cron.afterRun', array($returnArray));
 
         // Return the cron jobs array (including rundate, in-time boolean, runtime in seconds, number of errors and an array with the cron jobs reports)
-        return array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
+        return $returnArray;
     }
 
     /**
@@ -742,7 +758,7 @@ class Cron {
     }
 
     /**
-     * Is prevent job overlapping is enabled or disabled
+     * Is prevent job overlapping enabled or disabled
      *
      * @static
      * @return bool Return boolean if prevent job overlapping is enabled (true) or disabled (false)
@@ -755,6 +771,50 @@ class Cron {
             // If no value or not a boolean value is given, prevent overlapping is disabled
             return false;
         }
+    }
+    
+    /**
+     * Enable the Cron run in time check
+     *
+     * @static
+     */
+    public static function setEnableInTimeCheck() {
+        \Config::set('cron::inTimeCheck', true);
+    }
+    
+    /**
+     * Disable the Cron run in time check
+     *
+     * @static
+     */
+    public static function setDisableInTimeCheck() {
+        \Config::set('cron::inTimeCheck', true);
+    }
+    
+    /**
+     * Is the Cron run in time check enabled or disabled
+     *
+     * @static
+     * @return bool Return boolean if the Cron run in time check is enabled (true) or disabled (false)
+     */
+    public static function isInTimeCheck() {
+        $inTimeCheck = \Config::get('cron::inTimeCheck');
+        if (is_bool($inTimeCheck)) {
+            return $inTimeCheck;
+        } else {
+            // If no value or not a boolean value is given, in time check should be enabled
+            return true;
+        }
+    }
+    
+    /**
+     * Get added Cron jobs as array
+     *
+     * @static
+     * @return array Return array of the added Cron jobs
+     */
+    public static function getCronJobs() {
+        return self::$cronJobs;
     }
 
 }
