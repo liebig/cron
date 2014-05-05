@@ -18,6 +18,9 @@ return array(
     'deleteDatabaseEntriesAfter' => 240,
     
     // Prevent job overlapping - if Cron is still running it could not be started a second time
-    'preventOverlapping' => true
+    'preventOverlapping' => true,
+    
+    // Enable or disable the check if the current Cron run is in time
+    'inTimeCheck' => true
     
 );
