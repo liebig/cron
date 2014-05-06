@@ -1226,7 +1226,6 @@ class CronTest extends TestCase {
         });
         
         \Event::listen('cron.collectJobs', function($runDate) use (&$result) {
-            sleep(2);
             $now = new \DateTime();
             
             if(empty($runDate) || !is_int($runDate) || $runDate > $now->getTimestamp()) {
@@ -1241,7 +1240,6 @@ class CronTest extends TestCase {
         });
         
         \Event::listen('cron.beforeRun', function($runDate) use (&$result) {
-            sleep(2);
             $now = new \DateTime();
             
             if(empty($runDate) || !is_int($runDate) || $runDate > $now->getTimestamp()) {
@@ -1257,9 +1255,10 @@ class CronTest extends TestCase {
         $this->assertEquals('Before', $result[0]);
         $this->assertEquals('Collect', $result[1]);
         $this->assertEquals('Job', $result[2]);
-        $this->assertEquals(true, is_array($result[3]));
         
+        $this->assertEquals(true, is_array($result[3]));
         $this->assertEquals(1, $result[3]['errors']);
+        $this->assertEquals(1, count($result[3]['crons']));
         $this->assertEquals('test1', $result[3]['crons'][0]['name']);
         $this->assertEquals('No', $result[3]['crons'][0]['return']);
     }
