@@ -196,9 +196,6 @@ class Cron {
             $inTime = -1;
         }
         
-        // Fire event before the Cron jobs will be executed
-        \Event::fire('cron.collectJobs', array($runDate->getTimestamp()));
-
         // Initialize the job and job error array and start the runtime calculation
         $allJobs = array();
         $errorJobs = array();

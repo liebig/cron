@@ -37,6 +37,8 @@ class RunCommand extends Command {
 	 */
 	public function fire()
 	{
+            // Fire event before the Cron jobs will be executed
+            \Event::fire('cron.collectJobs');
             $report = Cron::run();
             
             $inTime = '';
