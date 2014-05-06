@@ -1225,12 +1225,8 @@ class CronTest extends TestCase {
             array_push($result, $jobArray);
         });
         
-        \Event::listen('cron.collectJobs', function($runDate) use (&$result) {
-            $now = new \DateTime();
-            
-            if(empty($runDate) || !is_int($runDate) || $runDate > $now->getTimestamp()) {
-                throw new \Exception('$runDate with value ' . $runDate . ' should not be empty, has to be an integer value and has to be lower then the current timestamp');
-            }
+        \Event::listen('cron.collectJobs', function() use (&$result) {
+
             array_push($result, "Collect");
             
             Cron::add('test1', "* * * * *", function() use (&$result) {
@@ -1248,12 +1244,13 @@ class CronTest extends TestCase {
             array_push($result, 'Before');
         });
         
-        Cron::run();
+        Artisan::call('cron:run', array());
+        //Cron::run();
         $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
         $this->assertEquals(1, \Liebig\Cron\Models\Job::count());
         
-        $this->assertEquals('Before', $result[0]);
-        $this->assertEquals('Collect', $result[1]);
+        $this->assertEquals('Collect', $result[0]);
+        $this->assertEquals('Before', $result[1]);
         $this->assertEquals('Job', $result[2]);
         
         $this->assertEquals(true, is_array($result[3]));
