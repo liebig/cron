@@ -41,15 +41,15 @@ class RunCommand extends Command {
             \Event::fire('cron.collectJobs');
             $report = Cron::run();
             
-            $inTime = '';
-            if($report['inTime']) {
-                $inTime = 'true';
-            } else {
-                $inTime = 'false';
-            }
-            
-            echo('|Run date|In time|Run time|Errors|Jobs|' . "\n");
-            echo('|'.$report['rundate'].'|'.$inTime.'|'.round($report['runtime'], 4).'|'.$report['errors'].'|'.count($report['crons']).'|');
+            $inTime = $report['inTime'] ? 'true' : 'false';
+
+            // Create table.
+            $table = $this->getHelperSet()->get('table');
+            $table->setHeaders(array('Run date', 'In time', 'Run time', 'Errors', 'Jobs'));
+            $table->addRow(array($report['rundate'], $inTime, round($report['runtime'], 4), $report['errors'], count($report['crons'])));
+
+            // Output table.
+            $table->render($this->getOutput());
 	}
 
 	/**
