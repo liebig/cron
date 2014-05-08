@@ -43,9 +43,10 @@ class ListCommand extends Command {
                 // Get all registered Cron jobs
                 $jobs = Cron::getCronJobs();
                 
-                // Echo the headline
-                echo('|Jobname|Expression|Activated|' . "\n");
-                
+                // Create the table helper with headers.
+                $table = $this->getHelperSet()->get('table');
+                $table->setHeaders(array('Jobname', 'Expression', 'Activated'));
+
                 // Run through all registered jobs
                 for ($i = 0; $i < count($jobs); $i++) {
                     
@@ -53,23 +54,14 @@ class ListCommand extends Command {
                     $job = $jobs[$i];
                     
                     // If job is enabled or disable use the defined string instead of 1 or 0
-                    $enabled = '';
-                    if($job['enabled']) {
-                        $enabled = 'enabled ';
-                    } else {
-                        $enabled = 'disabled';
-                    }
-                    
-                    // Add new line to all jobs but not the last one
-                    $newline = "\n";
-                    if($i + 1 === count($jobs)) {
-                        $newline = '';
-                    }
-                    
-                    // Echo the current job entry
-                    echo('|'.$job['name'].'|'.$job['expression']->getExpression().'|'.$enabled.'|'.$newline);
+                    $enabled = $job['enabled'] ? 'Enabled' : 'Disabled';
+
+                    // Add this job to the table.
+                    $table->addRow(array($job['name'], $job['expression']->getExpression(), $enabled));
                 }
-                
+
+                 // Render and output the table.
+                $table->render($this->getOutput());
 	}
 
 	/**
