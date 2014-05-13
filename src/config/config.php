@@ -12,7 +12,7 @@ return array(
     'databaseLogging' => true,
     
     // Enable or disable logging error jobs only
-    'logOnlyErrorJobsToDatabase' => true,
+    'logOnlyErrorJobsToDatabase' => false,
     
     // Delte old database entries after how many hours
     'deleteDatabaseEntriesAfter' => 240,
