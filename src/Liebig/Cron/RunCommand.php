@@ -6,70 +6,66 @@ use Illuminate\Console\Command;
 
 class RunCommand extends Command {
 
-	/**
-	 * The console command name.
-	 *
-	 * @var string
-	 */
-	protected $name = 'cron:run';
+    /**
+     * The console command name.
+     *
+     * @var string
+     */
+    protected $name = 'cron:run';
 
-	/**
-	 * The console command description.
-	 *
-	 * @var string
-	 */
-	protected $description = 'Run Cron jobs';
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Run Cron jobs';
 
-	/**
-	 * Create a new command instance.
-	 *
-	 * @return void
-	 */
-	public function __construct()
-	{
-		parent::__construct();
-	}
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct() {
+        parent::__construct();
+    }
 
-	/**
-	 * Execute the console command.
-	 *
-	 * @return void
-	 */
-	public function fire()
-	{
-            // Fire event before the Cron jobs will be executed
-            \Event::fire('cron.collectJobs');
-            $report = Cron::run();
-            
-            $inTime = $report['inTime'] ? 'true' : 'false';
+    /**
+     * Execute the console command.
+     *
+     * @return void
+     */
+    public function fire() {
+        // Fire event before the Cron jobs will be executed
+        \Event::fire('cron.collectJobs');
+        $report = Cron::run();
 
-            // Create table.
-            $table = $this->getHelperSet()->get('table');
-            $table->setHeaders(array('Run date', 'In time', 'Run time', 'Errors', 'Jobs'));
-            $table->addRow(array($report['rundate'], $inTime, round($report['runtime'], 4), $report['errors'], count($report['crons'])));
+        $inTime = $report['inTime'] ? 'true' : 'false';
 
-            // Output table.
-            $table->render($this->getOutput());
-	}
+        // Create table.
+        $table = $this->getHelperSet()->get('table');
+        $table->setHeaders(array('Run date', 'In time', 'Run time', 'Errors', 'Jobs'));
+        $table->addRow(array($report['rundate'], $inTime, round($report['runtime'], 4), $report['errors'], count($report['crons'])));
 
-	/**
-	 * Get the console command arguments.
-	 *
-	 * @return array
-	 */
-	protected function getArguments()
-	{
-		return array();
-	}
+        // Output table.
+        $table->render($this->getOutput());
+    }
 
-	/**
-	 * Get the console command options.
-	 *
-	 * @return array
-	 */
-	protected function getOptions()
-	{
-		return array();
-	}
+    /**
+     * Get the console command arguments.
+     *
+     * @return array
+     */
+    protected function getArguments() {
+        return array();
+    }
+
+    /**
+     * Get the console command options.
+     *
+     * @return array
+     */
+    protected function getOptions() {
+        return array();
+    }
 
 }
