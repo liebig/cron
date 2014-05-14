@@ -29,7 +29,7 @@ class CronServiceProvider extends ServiceProvider {
             
             // If no security key is set in the config, this route is disabled
             if (empty($cronkeyConfig)) {
-                \Log::warning('Cron route call with no configured security key');
+                \Log::error('Cron route call with no configured security key');
                 \App::abort(404);
             }
             
@@ -46,12 +46,12 @@ class CronServiceProvider extends ServiceProvider {
                     \Artisan::call('cron:run', array());
                 } else {
                     // Configured security key is not equals the sent security key
-                    \Log::warning('Cron route call with wrong security key');
+                    \Log::error('Cron route call with wrong security key');
                     \App::abort(404);
                 }
             } else {
                 // Validation not passed
-                \Log::warning('Cron route call with missing or no alphanumeric security key');
+                \Log::error('Cron route call with missing or no alphanumeric security key');
                 \App::abort(404);
             }
         });
