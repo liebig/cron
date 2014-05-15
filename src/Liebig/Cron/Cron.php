@@ -57,7 +57,7 @@ class Cron {
      * @param  string $expression The cron job expression (e.g. for every minute: '* * * * *')
      * @param  Closure $function The anonymous function which will be executed
      * @param  bool $isEnabled optional If the cron job should be enabled or disabled - the standard configuration is enabled
-     * @throws InvalidArgumentException if one of the parameters has the wrong data type, is incorrect or is not set
+     * @throws \InvalidArgumentException if one of the parameters has the wrong data type, is incorrect or is not set
      */
     public static function add($name, $expression, $function, $isEnabled = true) {
 
@@ -395,7 +395,7 @@ class Cron {
      * @static
      * @param  string $level The logger level as string which can be debug, info, notice, warning, error, critival, alert, emergency
      * @param  string $message The message which will be logged to Monolog
-     * @throws InvalidArgumentException if the parameter $level or $message is not of the data type string or if the $level parameter does not match with debug, info, notice, warning, error, critival, alert or emergency
+     * @throws \InvalidArgumentException if the parameter $level or $message is not of the data type string or if the $level parameter does not match with debug, info, notice, warning, error, critival, alert or emergency
      */
     private static function log($level, $message) {
 
@@ -476,7 +476,7 @@ class Cron {
      *
      * @static
      * @param  bool $bool Set to enable or disable Laravels logging
-     * @throws InvalidArgumentException if the $bool function paramter is not a boolean
+     * @throws \InvalidArgumentException if the $bool function paramter is not a boolean
      */
     public static function setLaravelLogging($bool) {
         if (is_bool($bool)) {
@@ -507,7 +507,7 @@ class Cron {
      *
      * @static
      * @param  bool $bool Set to enable or disable database logging
-     * @throws InvalidArgumentException if the $bool function paramter is not a boolean
+     * @throws \InvalidArgumentException if the $bool function paramter is not a boolean
      */
     public static function setDatabaseLogging($bool) {
         if (is_bool($bool)) {
@@ -542,7 +542,7 @@ class Cron {
      *
      * @static
      * @param  bool $bool Set to enable or disable logging error jobs only
-     * @throws InvalidArgumentException if the $bool function paramter is not a boolean
+     * @throws \InvalidArgumentException if the $bool function paramter is not a boolean
      */
     public static function setLogOnlyErrorJobsToDatabase($bool) {
         if (is_bool($bool)) {
@@ -586,7 +586,7 @@ class Cron {
      *
      * @static
      * @param  int $minutes Set the interval in minutes
-     * @throws InvalidArgumentException if the $minutes function paramter is not an integer
+     * @throws \InvalidArgumentException if the $minutes function paramter is not an integer
      */
     public static function setRunInterval($minutes) {
         if (is_int($minutes)) {
@@ -616,7 +616,7 @@ class Cron {
      *
      * @static
      * @param  int $hours optional Set the delete time in hours, if this value is 0 the delete old database entries function will be disabled - default value is 0
-     * @throws InvalidArgumentException if the $hours function paramter is not an integer
+     * @throws \InvalidArgumentException if the $hours function paramter is not an integer
      */
     public static function setDeleteDatabaseEntriesAfter($hours = 0) {
         if (is_int($hours)) {
@@ -687,7 +687,7 @@ class Cron {
      * @param  string $jobname The name of the job which should be enabled
      * @param  bool $enable The trigger for enable (true) or disable (false) the job with the given name
      * @return bool Return true if job was enabled successfully or false if no job with the $jobname parameter was found
-     * @throws InvalidArgumentException if the $enable function paramter is not a boolean
+     * @throws \InvalidArgumentException if the $enable function paramter is not a boolean
      */
     public static function setEnableJob($jobname, $enable = true) {
         // Check patameter
