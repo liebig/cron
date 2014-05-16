@@ -38,8 +38,14 @@ class RunCommand extends Command {
         // Fire event before the Cron jobs will be executed
         \Event::fire('cron.collectJobs');
         $report = Cron::run();
-
-        $inTime = $report['inTime'] ? 'true' : 'false';
+        
+        if($report['inTime'] === -1) {
+            $inTime = -1;
+        } else if ($report['inTime']) {
+            $inTime = 'true';
+        } else {
+            $inTime = 'false';
+        }
 
         // Create table.
         $table = $this->getHelperSet()->get('table');
