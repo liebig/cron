@@ -157,7 +157,7 @@ class Cron {
                         $cronmanager->runtime = -1;
                         $cronmanager->save();
                     }
-                    return array('rundate' => $runDate->getTimestamp(), 'runtime' => -1);
+                    return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array());
                 } else {
 
                     // Create lock file
