@@ -157,6 +157,9 @@ class Cron {
                         $cronmanager->runtime = -1;
                         $cronmanager->save();
                     }
+                    
+                    // Fire the after run event, because we are done here
+                    \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array()));
                     return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array());
                 } else {
 
@@ -235,6 +238,11 @@ class Cron {
                     array_push($errorJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
                     // Log error job
                     self::log('error', 'Job with the name ' . $job['name'] . ' was run with errors.');
+                    // Fire event after executing a job with erros
+                    \Event::fire('cron.jobError', array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
+                } else {
+                    // Fire event after executing a job successfully
+                    \Event::fire('cron.jobSuccess', array('name' => $job['name'], 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
                 }
 
                 // Push the information of the ran cron job to the allJobs array (including name, return value, runtime)
