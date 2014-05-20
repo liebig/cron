@@ -1,68 +1,132 @@
 # ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
 Job scheduling for Laravel
 
-Cron can be used for easily performing cron jobs in Laravel without using Artisan commands. The Cron way is to define a route which is called a variable number of minutes (default is every minute - * * * * *). To this route definition add your functions with their cron expressions. Each time the cron route is called, all cron jobs with a suitable cron expression will be called as well. And that is the Cron magic! Additionally Cron logs every run with the error jobs into the database for you and if you wish into a Monolog logger instance. This cron package is a holistic cron manager for your Laravel website.  
+Cron can be used for easily performing cron jobs in Laravel. If you want to run jobs from a cron schedule service from the internet or just use crontab on the same machine, Cron can help you. For more information how Cron can help you, please have a look at the [Raison d'être](#raison).
+
+Homepage: https://liebig.github.io/cron/
+Github: https://github.com/liebig/cron/
+API: http://liebig.github.io/cron/docs/api/classes/Liebig.Cron.Cron.html
 
 
-- [Overview](#overview)
-- [Installation](#installation)
-- [Usage](#usage)
-- [|--Add a cron job](#addjob)
-- [|--Remove a cron job](#removejob)
-- [|--Enable / disable a cron job](#enabledisable)
-- [|--Run the cron jobs](#runjob)
-- [|--Enable / disable Laravel logging](#enablelarvellogging)
-- [|--Set a Monolog logger](#setlogger)
-- [|--Disable database logging](#disabledatabaselogging)
-- [|--Log only error jobs to database](#logonlyerrorjobstodatabase)
-- [|--Delete old database entries](#deleteolddatabaseentries)
-- [|--Prevent overlapping](#preventoverlapping)
-- [|--Reset Cron](#reset)
-- [|--Changing default values](#defaultvalues)
-- [Full example](#fullexample)
-- [Changelog](#changelog)
+* [Raison d’être](#raison)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Example](#example)
+* [API](#api)
+  *  [Add a cron job](#addjob)
+  *  [Remove a cron job](#removejob)
+  *  [Enable / disable a cron job](#enabledisable)
+  *  [Run the cron jobs](#runjob)
+  *  [Enable / disable Laravel logging](#enablelarvellogging)
+  *  [Set a Monolog logger](#setlogger)
+  *  [Disable database logging](#disabledatabaselogging)
+  *  [Log only error jobs to database](#logonlyerrorjobstodatabase)
+  *  [Delete old database entries](#deleteolddatabaseentries)
+  *  [Prevent overlapping](#preventoverlapping)
+  *  [Events](#events)
+  *  [Commands](#commands)
+  *  [Reset Cron](#reset)
+* [Frequently Asked Questions](#faq)
+* [Changelog](#changelog)
 
 ---
 
-<a name="overview"></a>
-## Overview
+<a name="raison"></a>
+## Raison d’être
 
-You have to
-*   ... download this package
-*   ... define a route with all cron job definitions, closing with the `run()` method call
-*   ... buy or rent a server or service which call the defined cron route every predefined number of minutes (default is every minute) as normal a web request (e.g. with wget)
+### Simplicity
+The big goal is to create a simple central way to define cron jobs with Laravel. Creating cron jobs with Cron is simple because you can use the build in events for managing all your jobs. For creating a job you only need a job name, a cron expression and a function which will be called if the time has come. Of course PHP is only running if you call it, so you additionally need something which starts Cron. 
 
-You don't have to
-*   ... create Artisan commands
-*   ... own shell access to your server
-*   ... run the regular cron route requests on the same machine where your Laravel site is located
-*   ... worry about (cron) job management anymore
+### Accessibility
+The Cron start call can be executed from the same machine where your Laravel is located (for example with crontab) or from everywhere on the internet (for example from a web cron service) - it is just a command execution or route call.
 
-**NOTE**: If you have any trouble, questions or suggestions just open an issue. It would be nice to hear from you.
+### Centralization
+The Cron management is centralized at a single point in your application. You define all jobs in PHP and don't have to use other tools. Deactivating or removing a Cron job is only a PHP function call away.
+
+### Platform independency
+Laravel is a great way to build small and big web applications. But not every application platform runs on a server which allows unix shell access. For these applications Cron provides the possibility to use an external web cron service to start Cron. If you have shell access, it’s great and you can use Crons build in run command to start the job management. This is the meaning of independency. 
+
+### Monitoring
+If something went wrong with your jobs, Cron will inform you. Besides the logging to a Monolog object, to the Laravel logging facility and to database you can add an event listener to get information about error jobs or successfully executed jobs. After execution you will receive a detailed report about the Cron run. With the power of PHP and events, you can send a mail, a notification or anything else if anything goes good or bad. Cron is talkative like your grandma.
+
+### My personal comfort zone
+At last, Cron is my personal way to manage job scheduling. I am a web application developer, not an infrastructure guy. I like to handle things in PHP and not in the shell. I want to deploy my application to another server without worrying if I have access to crontab or other Linux tools. I really like Laravels event functionality and don't like Laravel commands. Cron management should be easy and powerful as well. And finally, I love to handle things at a single point in my application without using the shell or write a PHP file for each job. Cron is the try to manage cron jobs without headaches.
 
 ---
 
 <a name="installation"></a>
 ## Installation
 
-1.  Add `"liebig/cron": "dev-master"` to your `/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
-2.  Run the `composer update --no-dev` command in your shell from your `/laravel/` directory 
-3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `app\config\app.php` file
+1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
+2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory 
+3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `/path/to/laravel/app/config/app.php` file
 4.  Migrate the database with running the command `php artisan migrate --package="liebig/cron"`
-5.  Publish the configuration file with running the command `php artisan config:publish liebig/cron` - now you find the Cron configuration file in `/laravel/app/config/packages/liebig/cron` and this file won't be overwritten at any update
+5.  Publish the configuration file with running the command `php artisan config:publish liebig/cron` - now you find the Cron configuration file at `/path/to/laravel/app/config/packages/liebig/cron` and this file won't be overwritten at any update
 6.  Now you can use `Cron` everywhere for free
-
-**NOTE**: Since version v0.9.3 you can use `Cron` instead of `\Liebig\Cron\Cron`
 
 ---
 
-<a name="usage"></a>
-## Usage
+<a name="configuration"></a>
+## Configuration
+
+Cron is designed to work out of the box without the need of configuration. To enable this a few default values are set. To change Crons default settings there are two possibilities.
+
+### Set methods
+You can use the Cron set methods (e.g. `setDatabaseLogging`, `setRunInterval`) to change Crons behaviour. This changes are temporary and the set methods has to be called every time.
+
+### Config file
+The behaviour values will be loaded from a config file. You can change this values easily by editing the `/path/to/laravel/app/config/packages/liebig/cron/config.php` file. This is the more permanent way. If you only want to change settings for one run with conditions, we recommend to use the setter methods.
+
+**NOTE**: All values set via method will overwrite the values loaded from config file
+---
+
+<a name="example"></a>
+## Example
+
+### Cron
+If you use Crons build in route or command, you only need to listen for the `cron.collectJobs` event. The best place to do this is the `/path/to/laravel/app/start/global.php` file. If you have a development environment configured in your `/path/to/laravel/bootstrap/start.php` file, you may create a `/path/to/laravel/app/start/development.php` file and add the job definitions there.
+
+```php
+Event::listen('cron.collectJobs', function() {
+    Cron::add('example1', '* * * * *', function() {
+                    // Do some crazy things unsuccessfully every minute
+                    return 'No';
+                });
+                
+    Cron::add('example2', '*/2 * * * *', function() {
+        // Do some crazy things successfully every two minute
+        return null;
+    });
+    
+    Cron::add('disabled job', '0 * * * *', function() {
+        // Do some crazy things successfully every hour
+    }, false);
+});
+```
+
+Inside the anonymous function you can use all the Laravel and Cron functionality. In the next step you have to configure the route or command which will start Cron.
+
+### Using Crons build in route
+If you don't have shell access to your server, you can easily use an online cronjob service (Google knows some good provider). This provider will run Crons route in an defined interval. The Cron route has to be protected because if someone else than the service provider will invoke it, our jobs will be executed too often. For that reason we need in addition to the route path a security key. This key can be generated with the `php artisan cron:keygen` command call and has to be set in the Cron config file at the key `cronKey`.
+```php
+    // Cron application key for securing the built in Cron run route - if the value is empty, the route is disabled 
+    'cronKey' => '1PBgabAXdoLTy3JDyi0xRpTR2qNrkkQy'
+```
+Now you have to configure the address and run interval at your online cronjob service provider. The address for the build in Cron route always is `http://yourdomain.com/cron.php?key=securitykey`. For the above example this address could be `http://exampledomain.com/cron.php?key=1PBgabAXdoLTy3JDyi0xRpTR2qNrkkQy` and the run interval has to be every minute (due to the job with the name "example1"). Now the jobs was added, the route key was generated and the service provider was configured.
+
+### Using Crons build in command
+If your hosting provider grants you shell access or you can manage cron jobs with a control panel software (e.g. cPanel or Plesk), the best way to run Cron is to use the build in `artisan cron:run` command. For the above example the crontab or control panel software command could be `* * * * * /usr/bin/php /var/www/laravel/artisan cron:run`.
+
+**NOTE:** If you want to use Crons in time check, which will test if the time between two Cron run method calls are correct, please configure the key `runInterval`. In our example we call the route every minute so the value should be `1`.
+---
+
+<a name="api"></a>
+## API
 
 <a name="addjob"></a>
 ### Add a cron job
 
-Adding a cron job to Cron is very easy by using the static **add** function. As parameter the **name** of the cron job, the cron **expression** and an anonymous **function** is needed. The boolean **isEnabled** is optional and can enable or disable this cron job execution (default is enabled).
+Adding a cron job to Cron is very easy by using the static **add** function. As parameter the **name** of the cron job, the cron **expression** and an anonymous **function** is needed. The boolean **isEnabled** is optional and can enable or disable this cron job from execution (default is enabled).
 
 ```
 public static function add($name, $expression, $function, $isEnabled = true) {
@@ -279,7 +343,7 @@ To receive the current boolean value of the logging to database variable, just u
 <a name="logonlyerrorjobstodatabase"></a>
 ### Log only error jobs to database
 
-By default Cron will only log error jobs (which not return null) to database. Maybe you want to log all run jobs to database by using the static **setLogOnlyErrorJobsToDatabase** function. 
+By default Cron will log all jobs to database. Maybe sometimes you want to log only error jobs (which not return null) to database by using the static **setLogOnlyErrorJobsToDatabase** function. 
 
 ```
 public static function setLogOnlyErrorJobsToDatabase($bool) {
@@ -288,13 +352,13 @@ public static function setLogOnlyErrorJobsToDatabase($bool) {
 #### Example
 
 ```
-// Log all jobs (not only the error jobs) to database
-Cron::setLogOnlyErrorJobsToDatabase(false);
+// Log only error jobs to database
+Cron::setLogOnlyErrorJobsToDatabase(true);
 ```
 
 #### Getter
 
-To receive the current boolean value of the logging only error jobs to database variable, just use the static `isLogOnlyErrorJobsToDatabase()` function.
+To receive the current boolean value of the error job logging, use the static `isLogOnlyErrorJobsToDatabase()` function.
 
 ---
 
@@ -323,7 +387,7 @@ To receive the current reference value just use the static `getDeleteDatabaseEnt
 <a name="preventoverlapping"></a>
 ### Prevent overlapping
 
-Cron can prevent job overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will execute jobs at the same time. When running a job twice at the same time, side effects can come up. Cron can avoid such overlaps by using simple locking techniques.
+Cron can prevent overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will execute jobs at the same time. When running a job twice at the same time, side effects can come up. Cron can avoid such overlaps by using simple locking techniques.
 
 ```
 public static function setEnablePreventOverlapping() {
@@ -344,7 +408,38 @@ Cron::setDisablePreventOverlapping();
 
 To receive the current boolean value just use the static `isPreventOverlapping` function.
 
-**NOTE**: To use the overlapping functionality, Cron needs write access to the Laravel storage directory.
+**NOTE**: To use the overlapping functionality, Cron needs write access to the Laravel storage directory. On some Windows machines the lock file cannot be deleted. If you see a delete error message in your log, please disable this feature.
+
+---
+
+<a name="events"></a>
+### Events
+
+Cron supports Laravel events and provides many information about the run and job status. With this you can react to errors. Cron supports the following events.
+
+`cron.collectJobs` - fired before run method call to add jobs and to configure Cron. **NOTE**: Only fired if you use Crons build in route or command.
+`cron.beforeRun` - fired before run method call to inform that Cron is about to start. Paramter: `$runDate`.
+`cron.jobError` - fired after a job was exectued and this job returned an error (return value is not equals null). Parameter: `$name`, `$return`, `$runtime`, `$rundate`.
+`cron.jobSuccess` - fired after a job was executed and this job did not return an error (return value is equals null). Parameter: `$name`, `$runtime`, `$rundate`.
+`cron.afterRun` - fired after the Cron run was finished. Parameter: `$rundate`, `$inTime`, `$runtime`, `$errors` - number of error jobs, `$crons` - array of all exectued jobs with `$name`, `$return`, `$runtime`
+
+To subscribe to an event, use Laravels `Event` facility. The best place for this is the `/path/to/laravel/app/start/global.php` file.
+```php
+Event::listen('cron.jobError', function($name, $return, $runtime, $rundate){
+    Log::error('Job with the name ' . $name . ' returned an error.');
+});
+```
+
+---
+
+<a name="commands"></a>
+### Commands
+
+Cron brings you the following Laravel commands.
+
+`cron:run` - fires the `cron.collectJobs` event and starts Cron
+`cron:list` - fires the `cron.collectJobs` event and lists all registered Cron jobs
+`cron:keygen` - generates a security token with 32 characters
 
 ---
 
@@ -372,71 +467,34 @@ Cron::reset();
 
 ---
 
-<a name="defaultvalues"></a>
-### Changing default values
+<a name="faq"></a>
+## Frequently Asked Questions
 
-Cron is designed to work out of the box without configuration. To enable this behaviour a few default values are set. To change Crons default settings there are two possibilities.
+### Do I really need crontab or an online cronjob service
+Yes, you do. Differently to a Java application server for example, PHP only runs if it is executed. If crontab or an online cronjob service provider calls PHP and starts the application, Cron can execute the jobs and will start the work. If PHP is not started, the application sleeps and nothing happens. 
 
-#### Set methods
+### What is the best interval to call the route or command?
+The best interval depends on your jobs. If one job should be executed every minute and another every five minutes, the route or command has to be called every minute. In general you have to find the the greatest common divisor of your jobs. Please don't forget to change the `runInterval` config value if the route or command is not called every minute (default value) and if you want to use Crons in time check.
 
-You can use the Cron set methods (e.g. setDatabaseLogging, setRunInterval) to change the behaviour. This changes are temporary and the set methods has to be called every time before running the **run** method. 
-
-#### Config file
-
-The behaviour values will be loaded from a Cron config file. You can change this values easily by editing the `src/config/config.php` file. This is the more permanent way. If you only want to change settings for one run, we recommend to use the setter methods.
-
----
-
-<a name="fullexample"></a>
-## Full example
-
-At first we create a route which should be called in a defined interval.
-
-**NOTE**: We have to protect this route because if someone calls this uncontrolled, our cron management doesn't work. A possibility is to set the route path to a long value. Another good alternative is (if you know the IP address of the calling server) to check if the IP address matchs.
-
-```
-Route::get('/Cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
-
-});
-```
-
-Now we can add our cron jobs to this route and of course call the run method. At the end we print out the report.
-
-```
-Route::get('/cron/run/c68pd2s4e363221a3064e8807da20s1sf', function () {
-    Cron::add('example1', '* * * * *', function() {
-                        // Do some crazy things every minute
-                        return null;
-                    });
-    Cron::add('example2', '*/2 * * * *', function() {
-                        // Do some crazy things every two minutes
-                        return null;
-                    });
-    $report = Cron::run();
-    print_r ($report);
-});
-```
-
-And that is the Cron magic. Now we have to ensure that this route is called in an interval. This can be done with renting an own (virtual) server or with an online cronjob service. In both cases Google knows many good providers. An online cronjob service overview can be found at http://www.cronjobservices.com/
-
-To configure a `wget` web request by using `crontab -e` or a control panel software (e.g. cPanel or Plesk) on an own (virtual) server use the following code:
-
-```
-* * * * * wget -O - http://yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf >/dev/null 2>&1
-```
-
-For using `cURL` instead of wget on your server use this code:
-
-```
-* * * * * curl "http://yoursite.com/cron/run/c68pd2s4e363221a3064e8807da20s1sf" >/dev/null 2>&1
-```
-
-The starting five asterisks are the cron expressions. We want to start our Cron management every minute in this example. The tool `wget` retrieves files using HTTP, HTTPS and FTP. Using the parameter `-O -` causes that the output of the web request will be sent to STDOUT (standard output). `cURL` is a command line tool for getting or sending files using URL syntax. By adding `>/dev/null` we instruct standard output to be redirect to a black hole (/dev/null). By adding `2>&1` we instruct STDERR (standard errors) to also be sent to STDOUT (in this example this is /dev/null). So it will load our website at the Cron route every minute, but never write a file anywhere.
+### Cron is not running properly and returns `runtime` and `inTime` with value `-1`
+By default Cron prevents overlapping. This means that only one Cron instance will run at the same time. If another instance is called, Cron will not run and will return the runtime and inTime parameter with the value -1. On some Windows machines the deletion of the lock file fails and you have to disable this feature. Please have a look at the [prevent overlapping section](#preventoverlapping).
 
 ---
 
 <a name="changelog"></a>
 ## Changelog
+
+### To be announced - v1.0.0
+* Adding Laravel route with security token
+* Adding Artisan command for generating security token
+* Adding Artisan command for running Cron easily with e.g. crontab
+* Adding Artisan command for list all jobs, added via event
+* Adding events
+* Adding overlapping protection
+* Changing default value for config key 'logOnlyErrorJobsToDatabase' to false
+* Fixing PHP doc markup
+* Generating API
+* Refurbishing this README file
 
 ### 2014/02/11 - v0.9.5
 * Bug fixing release
@@ -444,13 +502,13 @@ The starting five asterisks are the cron expressions. We want to start our Cron 
 * Fixing time bug - if a job took more than one minute for execution the following jobs were not handled
 
 ### 2013/11/12 - v0.9.4
-* Added Laravel logging facilities - by default Cron will log to Laravel now
-* Added Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueExceptions now
+* Adding Laravel logging facilities - by default Cron will log to Laravel now
+* Adding Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueExceptions now
 * Minor bug fixes
 
 ### 2013/11/01 - v0.9.3
-* Added facade for Cron - you can use `Cron` instead of `\Liebig\Cron\Cron` now
-* Added facade test cases
+* Adding facade for Cron - you can use `Cron` instead of `\Liebig\Cron\Cron` now
+* Adding facade test cases
 
 ---
 
@@ -478,4 +536,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-Icon Copyright (c) Timothy Miller (http://www.iconfinder.com/icondetails/171279/48/alarm_bell_clock_time_icon) under Creative Commons (Attribution-Share Alike 3.0 Unported) License - Thank you for this awesome icon
+Icon Copyright (c) Timothy Miller (http://www.iconfinder.com/icondetails/171279/48/alarm_bell_clock_time_icon) under Creative Commons (Attribution-Share Alike 3.0 Unported) License - Thank you for this awesome icon you own
