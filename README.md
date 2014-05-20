@@ -7,6 +7,7 @@ Cron can be used for easily performing cron jobs in Laravel. If you want to run 
 * Github: https://github.com/liebig/cron/
 * API: http://liebig.github.io/cron/docs/api/classes/Liebig.Cron.Cron.html
 
+---
 
 * [Raison d’être](#raison)
 * [Installation](#installation)
