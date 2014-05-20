@@ -3,9 +3,9 @@ Job scheduling for Laravel
 
 Cron can be used for easily performing cron jobs in Laravel. If you want to run jobs from a cron schedule service from the internet or just use crontab on the same machine, Cron can help you. For more information how Cron can help you, please have a look at the [Raison d'être](#raison).
 
-Homepage: https://liebig.github.io/cron/
-Github: https://github.com/liebig/cron/
-API: http://liebig.github.io/cron/docs/api/classes/Liebig.Cron.Cron.html
+* Homepage: https://liebig.github.io/cron/
+* Github: https://github.com/liebig/cron/
+* API: http://liebig.github.io/cron/docs/api/classes/Liebig.Cron.Cron.html
 
 
 * [Raison d’être](#raison)
@@ -78,6 +78,7 @@ You can use the Cron set methods (e.g. `setDatabaseLogging`, `setRunInterval`) t
 The behaviour values will be loaded from a config file. You can change this values easily by editing the `/path/to/laravel/app/config/packages/liebig/cron/config.php` file. This is the more permanent way. If you only want to change settings for one run with conditions, we recommend to use the setter methods.
 
 **NOTE**: All values set via method will overwrite the values loaded from config file
+
 ---
 
 <a name="example"></a>
@@ -118,6 +119,7 @@ Now you have to configure the address and run interval at your online cronjob se
 If your hosting provider grants you shell access or you can manage cron jobs with a control panel software (e.g. cPanel or Plesk), the best way to run Cron is to use the build in `artisan cron:run` command. For the above example the crontab or control panel software command could be `* * * * * /usr/bin/php /var/www/laravel/artisan cron:run`.
 
 **NOTE:** If you want to use Crons in time check, which will test if the time between two Cron run method calls are correct, please configure the key `runInterval`. In our example we call the route every minute so the value should be `1`.
+
 ---
 
 <a name="api"></a>
@@ -417,11 +419,11 @@ To receive the current boolean value just use the static `isPreventOverlapping` 
 
 Cron supports Laravel events and provides many information about the run and job status. With this you can react to errors. Cron supports the following events.
 
-`cron.collectJobs` - fired before run method call to add jobs and to configure Cron. **NOTE**: Only fired if you use Crons build in route or command.
-`cron.beforeRun` - fired before run method call to inform that Cron is about to start. Paramter: `$runDate`.
-`cron.jobError` - fired after a job was exectued and this job returned an error (return value is not equals null). Parameter: `$name`, `$return`, `$runtime`, `$rundate`.
-`cron.jobSuccess` - fired after a job was executed and this job did not return an error (return value is equals null). Parameter: `$name`, `$runtime`, `$rundate`.
-`cron.afterRun` - fired after the Cron run was finished. Parameter: `$rundate`, `$inTime`, `$runtime`, `$errors` - number of error jobs, `$crons` - array of all exectued jobs with `$name`, `$return`, `$runtime`
+* `cron.collectJobs` - fired before run method call to add jobs and to configure Cron. **NOTE**: Only fired if you use Crons build in route or command.
+* `cron.beforeRun` - fired before run method call to inform that Cron is about to start. Paramter: `$runDate`.
+* `cron.jobError` - fired after a job was exectued and this job returned an error (return value is not equals null). Parameter: `$name`, `$return`, `$runtime`, `$rundate`.
+* `cron.jobSuccess` - fired after a job was executed and this job did not return an error (return value is equals null). Parameter: `$name`, `$runtime`, `$rundate`.
+* `cron.afterRun` - fired after the Cron run was finished. Parameter: `$rundate`, `$inTime`, `$runtime`, `$errors` - number of error jobs, `$crons` - array of all exectued jobs with `$name`, `$return`, `$runtime`
 
 To subscribe to an event, use Laravels `Event` facility. The best place for this is the `/path/to/laravel/app/start/global.php` file.
 ```php
@@ -437,9 +439,9 @@ Event::listen('cron.jobError', function($name, $return, $runtime, $rundate){
 
 Cron brings you the following Laravel commands.
 
-`cron:run` - fires the `cron.collectJobs` event and starts Cron
-`cron:list` - fires the `cron.collectJobs` event and lists all registered Cron jobs
-`cron:keygen` - generates a security token with 32 characters
+* `cron:run` - fires the `cron.collectJobs` event and starts Cron
+* `cron:list` - fires the `cron.collectJobs` event and lists all registered Cron jobs
+* `cron:keygen` - generates a security token with 32 characters
 
 ---
 
