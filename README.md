@@ -1,7 +1,7 @@
 # ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
 Job scheduling for Laravel
 
-Cron can be used for easily performing cron jobs in Laravel. If you want to run jobs from a cron schedule service from the internet or just use crontab on the same machine, Cron can help you. For more information how Cron can simplify your job scheduling, please have a look at the [Raison d'être](#raison).
+Cron can be used for easily performing cron jobs in Laravel. If you want to run jobs from the internet or just from the locale computer, Cron can help you. For more information how Cron can simplify your job scheduling, please have a look at the [Raison d'être](#raison).
 
 * Homepage: https://liebig.github.io/cron/
 * Github: https://github.com/liebig/cron/
@@ -51,7 +51,7 @@ Laravel is a great way to build small and big web applications. But not every ap
 If something went wrong with your jobs, Cron will inform you. Besides the logging to a Monolog object, to the Laravel logging facility and to database you can add an event listener to get information about error jobs or successfully executed jobs. After execution you will receive a detailed report about the Cron run. With the power of PHP and events, you can send a mail, a notification or anything else if anything goes good or bad. Cron is talkative like your grandma.
 
 ### My personal comfort zone
-At last, Cron is my personal way to manage job scheduling. I am a web application developer, not an infrastructure guy. I like to handle things in PHP and not in the shell. I want to deploy my application to another server without worrying if I have access to crontab or other Linux tools. I really like Laravels event functionality and don't like Laravel commands. Cron management should be easy and powerful as well. And finally, I love to handle things at a single point in my application without using the shell or write a PHP file for each job. Cron is the try to manage cron jobs without headaches.
+At last, Cron is my personal way to manage job scheduling. I am a web application developer, not an infrastructure guy. I like to handle things in PHP and not in the shell. I want to deploy my application to another server without worrying if I have access to crontab or other Linux tools. I really like Laravels event functionality but don't like Laravel commands. Cron management should be easy and powerful as well. And finally, I love to handle things at a single point in my application without using the shell or write a PHP file for each job. Cron is the try to manage cron jobs without headaches.
 
 ---
 
@@ -498,6 +498,7 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 * Fixing PHP doc markup
 * Generating API
 * Refurbishing this README file
+* Minor bug fixes
 
 ### 2014/02/11 - v0.9.5
 * Bug fixing release
