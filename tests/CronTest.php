@@ -1233,6 +1233,10 @@ class CronTest extends TestCase {
                     array_push($result, 'Job');
                     return 'No';
                 });
+                
+            Cron::add('test2', "* * * * *", function() use (&$result) {
+                array_push($result, 'Job');
+            });
         });
         
         \Event::listen('cron.beforeRun', function($runDate) use (&$result) {
@@ -1244,20 +1248,137 @@ class CronTest extends TestCase {
             array_push($result, 'Before');
         });
         
-        Artisan::call('cron:run', array());
-        //Cron::run();
+        $successArray = array();
+        \Event::Listen('cron.jobSuccess', function($name, $runtime, $rundate) use (&$successArray) {
+            array_push($successArray, $name); 
+        });
+        
+        $errorArray = array();
+        \Event::Listen('cron.jobError', function($name, $runtime, $rundate) use (&$errorArray) {
+            array_push($errorArray, $name); 
+        });
+        
+        \Artisan::call('cron:run', array());
         $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
         $this->assertEquals(1, \Liebig\Cron\Models\Job::count());
         
         $this->assertEquals('Collect', $result[0]);
         $this->assertEquals('Before', $result[1]);
         $this->assertEquals('Job', $result[2]);
+        $this->assertEquals('Job', $result[3]);
         
-        $this->assertEquals(true, is_array($result[3]));
-        $this->assertEquals(1, $result[3]['errors']);
-        $this->assertEquals(1, count($result[3]['crons']));
-        $this->assertEquals('test1', $result[3]['crons'][0]['name']);
-        $this->assertEquals('No', $result[3]['crons'][0]['return']);
+        $this->assertEquals(true, is_array($result[4]));
+        $this->assertEquals(1, $result[4]['errors']);
+        $this->assertEquals(2, count($result[4]['crons']));
+        $this->assertEquals('test1', $result[4]['crons'][0]['name']);
+        $this->assertEquals('No', $result[4]['crons'][0]['return']);
+        
+        $this->assertEquals(1, count($successArray));
+        $this->assertEquals('test2', $successArray[0]);
+        
+        $this->assertEquals(1, count($errorArray));
+        $this->assertEquals('test1', $errorArray[0]);
+    }
+    
+    /**
+     *  Tests the Cron run command
+     *
+     *  @covers \Liebig\Cron\RunCommand
+     */
+    public function testRunCommand() {
+        
+        $result = array();
+        \Event::listen('cron.collectJobs', function() use (&$result)  {
+            
+            Cron::add('test1', "* * * * *", function() use (&$result)  {
+                        array_push($result, 'test1');
+                });
+                
+            Cron::add('test2', "* * * * *", function() use (&$result)  {
+                array_push($result, 'test2');
+                return 'No';
+            });
+        });
+        
+        \Artisan::call('cron:run', array());
+        $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
+        $this->assertEquals(1, \Liebig\Cron\Models\Job::count());
+        
+        $this->assertEquals(2, count($result));
+        $this->assertEquals('test1', $result[0]);
+        $this->assertEquals('test2', $result[1]);
+    }
+    
+    /**
+     *  Tests the Cron list command
+     *
+     *  @covers \Liebig\Cron\ListCommand
+     */
+    public function testListCommand() {
+        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+            fopen('php://output', 'w')
+        );
+        ob_start();
+        \Artisan::call('cron:list', array(), $outputStream);
+        $commandOutput = ob_get_clean();
+        
+        $this->assertTrue(is_int(strpos($commandOutput, 'Jobname')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'Expression')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'Activated')));
+        
+        \Event::listen('cron.collectJobs', function()  {
+            
+            Cron::add('test1', "* * * * *", function()  {
+                });
+                
+            Cron::add('test2', "* * * * *", function() {
+                return 'No';
+            }, false);
+        });
+        
+        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+            fopen('php://output', 'w')
+        );
+        ob_start();
+        \Artisan::call('cron:list', array(), $outputStream);
+        $commandOutput = ob_get_clean();
+        
+        $this->assertTrue(is_int(strpos($commandOutput, 'Jobname')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'Expression')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'Activated')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'test1')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'test2')));
+        $this->assertTrue(is_int(strpos($commandOutput, '* * * * *')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'Enabled')));
+        $this->assertTrue(is_int(strpos($commandOutput, 'Disabled')));
+    }
+    
+    /**
+     *  Tests the Cron keygen command
+     *
+     *  @covers \Liebig\Cron\KeygenCommand
+     */
+    public function testKeygenCommand() {
+        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+            fopen('php://output', 'w')
+        );
+        ob_start();
+        \Artisan::call('cron:keygen', array(), $outputStream);
+        $commandOutput = ob_get_clean();
+
+        $this->assertEquals(32, strlen(str_replace("\r\n",'', $commandOutput)));
+        $this->assertTrue(ctype_alnum(str_replace("\r\n",'', $commandOutput)));
+  
+        
+        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+            fopen('php://output', 'w')
+        );
+        ob_start();
+        \Artisan::call('cron:keygen', array('length' => 5), $outputStream);
+        $commandOutput = ob_get_clean();
+        
+        $this->assertEquals(5, strlen(str_replace("\r\n",'', $commandOutput)));
+        $this->assertTrue(ctype_alnum(str_replace("\r\n",'', $commandOutput)));
     }
     
     
