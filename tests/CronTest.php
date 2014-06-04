@@ -1365,9 +1365,12 @@ class CronTest extends TestCase {
         ob_start();
         \Artisan::call('cron:keygen', array(), $outputStream);
         $commandOutput = ob_get_clean();
+        
+        $commandOutput = str_replace("\r",'', $commandOutput);
+        $commandOutput = str_replace("\n",'', $commandOutput);
 
-        $this->assertEquals(32, strlen(str_replace("\r\n",'', $commandOutput)));
-        $this->assertTrue(ctype_alnum(str_replace("\r\n",'', $commandOutput)));
+        $this->assertEquals(32, strlen($commandOutput));
+        $this->assertTrue(ctype_alnum($commandOutput));
   
         
         $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
@@ -1377,8 +1380,11 @@ class CronTest extends TestCase {
         \Artisan::call('cron:keygen', array('length' => 5), $outputStream);
         $commandOutput = ob_get_clean();
         
-        $this->assertEquals(5, strlen(str_replace("\r\n",'', $commandOutput)));
-        $this->assertTrue(ctype_alnum(str_replace("\r\n",'', $commandOutput)));
+        $commandOutput = str_replace("\r",'', $commandOutput);
+        $commandOutput = str_replace("\n",'', $commandOutput);
+        
+        $this->assertEquals(5, strlen($commandOutput));
+        $this->assertTrue(ctype_alnum($commandOutput));
     }
     
     
