@@ -65,6 +65,7 @@ class CronTest extends TestCase {
         \Config::set('cron::logOnlyErrorJobsToDatabase', true);
         \Config::set('cron::deleteDatabaseEntriesAfter', 240);
         \Config::set('cron::preventOverlapping', false);
+        \Config::set('cron::cronKey', '');
     }
 
     /**
@@ -1387,6 +1388,128 @@ class CronTest extends TestCase {
         $this->assertTrue(ctype_alnum($commandOutput));
     }
     
+    /**
+     *  Tests the Cron run route without setting up the security key
+     *
+     *  @covers \Liebig\Cron\CronServiceProvider
+     *  @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function testRunRouteWithoutKey() {
+        
+        \Event::listen('cron.collectJobs', function()  {
+            
+            Cron::add('test1', "* * * * *", function()  {
+                });
+                
+            Cron::add('test2', "* * * * *", function() {
+                return 'No';
+            });
+        });
+        
+        $this->call('GET', 'cron.php');
+    }
+    
+    /**
+     *  Tests the Cron run route with setting up the security key but without sending a key
+     *
+     *  @covers \Liebig\Cron\CronServiceProvider
+     *  @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function testRunRouteWithKeyWithNoSendKey() {
+        
+        \Event::listen('cron.collectJobs', function()  {
+            
+            Cron::add('test1', "* * * * *", function()  {
+                });
+                
+            Cron::add('test2', "* * * * *", function() {
+                return 'No';
+            });
+        });
+        
+        \Config::set('cron::cronKey', 'yT7yt3sa4tg5vtlLWbofF95v65FSWWZ8');
+        $this->call('GET', 'cron.php');
+    }
+    
+    /**
+     *  Tests the Cron run route with setting up the security key but with sending a wrong key
+     *
+     *  @covers \Liebig\Cron\CronServiceProvider
+     *  @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function testRunRouteWithKeyWithWrongSendKey() {
+        
+        \Event::listen('cron.collectJobs', function()  {
+            
+            Cron::add('test1', "* * * * *", function()  {
+                });
+                
+            Cron::add('test2', "* * * * *", function() {
+                return 'No';
+            });
+        });
+        
+        \Config::set('cron::cronKey', 'yT7yt3sa4tg5vtlLWbofF95v65FSWWZ8');
+        $this->call('GET', 'cron.php', array('key'=>'yT7yt3sa4tg5vtlLWbofF95v65FSWWZ9'));
+    }
+    
+    /**
+     *  Tests the Cron run route with setting up the security key but with sending a key with not alphanumeric characters
+     *
+     *  @covers \Liebig\Cron\CronServiceProvider
+     *  @expectedException \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function testRunRouteWithKeyWithNotAlphanumericSendKey() {
+        
+        \Event::listen('cron.collectJobs', function()  {
+            
+            Cron::add('test1', "* * * * *", function()  {
+                });
+                
+            Cron::add('test2', "* * * * *", function() {
+                return 'No';
+            });
+        });
+        
+        \Config::set('cron::cronKey', 'yT7yt3sa4tg5vtlLWbofF95v65FSWWZ8');
+        $this->call('GET', 'cron.php', array('key'=>'&!€%<>'));
+    }
+    
+    /**
+     *  Tests the Cron run route with setting up the security key and with sending the right key
+     *
+     *  @covers \Liebig\Cron\CronServiceProvider
+     */
+    public function testRunRouteWithKeyWithCorrectSendKey() {
+        
+        \Event::listen('cron.collectJobs', function()  {
+            
+            Cron::add('test1', "* * * * *", function()  {
+                });
+                
+            Cron::add('test2', "* * * * *", function() {
+                return 'No';
+            });
+        });
+        
+        \Config::set('cron::cronKey', 'yT7yt3sa4tg5vtlLWbofF95v65FSWWZ8');
+        \Config::set('cron::logOnlyErrorJobsToDatabase', false);
+        $response = $this->call('GET', 'cron.php', array('key'=>'yT7yt3sa4tg5vtlLWbofF95v65FSWWZ8'));
+        
+        $this->assertEquals(200, $response->getStatusCode());
+        
+        $this->assertEquals(1, \Liebig\Cron\Models\Manager::count());
+        $this->assertEquals(2, \Liebig\Cron\Models\Job::count());
+
+        $jobs = \Liebig\Cron\Models\Job::all();
+        $this->assertEquals(2, count($jobs));
+
+        $this->assertEquals('test1', $jobs[0]->name);
+        $this->assertEquals('', $jobs[0]->return);
+        
+        $this->assertEquals('test2', $jobs[1]->name);
+        $this->assertEquals('No', $jobs[1]->return);
+    }
     
 }
 
