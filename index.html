@@ -208,8 +208,8 @@
 
 <p>Adding a cron job to Cron is very easy by using the static <strong>add</strong> function. As parameter the <strong>name</strong> of the cron job, the cron <strong>expression</strong> and an anonymous <strong>function</strong> is needed. The boolean <strong>isEnabled</strong> is optional and can enable or disable this cron job from execution (default is enabled).</p>
 
-<pre><code>public static function add($name, $expression, $function, $isEnabled = true) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">add</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$expression</span><span class="p">,</span> <span class="nv">$function</span><span class="p">,</span> <span class="nv">$isEnabled</span> <span class="o">=</span> <span class="k">true</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <p>The <strong>name</strong> is needed for identifying a cron job if an error appears and for logging.</p>
 
@@ -233,15 +233,15 @@
 <h4>
 <a name="example-1" class="anchor" href="#example-1"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>Cron::add('example1', '* * * * *', function() {
-                    // Do some crazy things successfully every minute
-                    return null;
-                });
-Cron::add('example2', '*/2 * * * *', function() {
-                    // Oh no, this job has errors and runs every two minutes
-                    return false;
-                }, true);
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nx">Cron</span><span class="o">::</span><span class="na">add</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">,</span> <span class="s1">'* * * * *'</span><span class="p">,</span> <span class="k">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="c1">// Do some crazy things successfully every minute</span>
+                    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+                <span class="p">});</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">add</span><span class="p">(</span><span class="s1">'example2'</span><span class="p">,</span> <span class="s1">'*/2 * * * *'</span><span class="p">,</span> <span class="k">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="c1">// Oh no, this job has errors and runs every two minutes</span>
+                    <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+                <span class="p">},</span> <span class="k">true</span><span class="p">);</span>
+</pre></div>
 
 <hr><p><a name="removejob"></a></p>
 
@@ -250,18 +250,18 @@ Cron::add('example2', '*/2 * * * *', function() {
 
 <p>To remove a set cron job on runtime use the <strong>remove</strong> method with the cron job name as string parameter.</p>
 
-<pre><code>public static function remove($name) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">remove</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-2" class="anchor" href="#example-2"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>Cron::add('example1', '* * * * *', function() {
-                    // Do some crazy things successfully every minute
-                    return null;
-                });
-Cron::remove('example1');
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nx">Cron</span><span class="o">::</span><span class="na">add</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">,</span> <span class="s1">'* * * * *'</span><span class="p">,</span> <span class="k">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="c1">// Do some crazy things successfully every minute</span>
+                    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+                <span class="p">});</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">remove</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">);</span>
+</pre></div>
 
 <hr><p><a name="enabledisable"></a></p>
 
@@ -270,26 +270,26 @@ Cron::remove('example1');
 
 <p>After adding an enabled or disabled cron job ($isEnabled boolean parameter of the add method call) you can disable or enable a cron job by name. For this use the <strong>setEnableJob</strong> or <strong>setDisableJob</strong> function.</p>
 
-<pre><code>public static function setEnableJob($jobname, $enable = true) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setEnableJob</span><span class="p">(</span><span class="nv">$jobname</span><span class="p">,</span> <span class="nv">$enable</span> <span class="o">=</span> <span class="k">true</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
-<pre><code>public static function setDisableJob($jobname) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setDisableJob</span><span class="p">(</span><span class="nv">$jobname</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-3" class="anchor" href="#example-3"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>Cron::add('example1', '* * * * *', function() {
-                    // Do some crazy things successfully every minute
-                    return null;
-                });
-Cron::setDisableJob('example1');
-// No jobs will be called
-$report = Cron::run();
-Cron::setEnableJob('example1');
-// One job will be called
-$report = Cron::run();
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nx">Cron</span><span class="o">::</span><span class="na">add</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">,</span> <span class="s1">'* * * * *'</span><span class="p">,</span> <span class="k">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="c1">// Do some crazy things successfully every minute</span>
+                    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+                <span class="p">});</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setDisableJob</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">);</span>
+<span class="c1">// No jobs will be called</span>
+<span class="nv">$report</span> <span class="o">=</span> <span class="nx">Cron</span><span class="o">::</span><span class="na">run</span><span class="p">();</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setEnableJob</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">);</span>
+<span class="c1">// One job will be called</span>
+<span class="nv">$report</span> <span class="o">=</span> <span class="nx">Cron</span><span class="o">::</span><span class="na">run</span><span class="p">();</span>
+</pre></div>
 
 <h4>
 <a name="getter" class="anchor" href="#getter"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -303,14 +303,14 @@ $report = Cron::run();
 
 <p>Running the cron jobs is as easy as adding them. Just call the static <strong>run</strong> method and wait until each added cron job expression is checked. As soon as the time of the expression has come, the corresponding cron job will be invoked. That is the Cron magic. The <strong>run</strong> method returns a detailed report. By default Cron reckons that you call this method every minute (* * * * *) and by default the report (with their cron jobs errors) will be logged to database. You can change this interval using the <code>setRunInterval</code> function.</p>
 
-<pre><code>public static function run() {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">run</span><span class="p">()</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-4" class="anchor" href="#example-4"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>$report = Cron::run();
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nv">$report</span> <span class="o">=</span> <span class="nx">Cron</span><span class="o">::</span><span class="na">run</span><span class="p">();</span>
+</pre></div>
 
 <p><strong>NOTE</strong>: The <strong>run</strong> method call has to be the last function call after adding jobs, setting the interval, deactivating database logging and the other function calls.</p>
 
@@ -319,19 +319,19 @@ $report = Cron::run();
 
 <p>The run interval is the time between two cron job route calls. Some cron service provider only supports calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.</p>
 
-<pre><code>public static function setRunInterval($minutes) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setRunInterval</span><span class="p">(</span><span class="nv">$minutes</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <p><strong>NOTE</strong>: If the route call interval is not every minute you have to adjust your cron job expressions to fit to this interval.</p>
 
 <h4>
 <a name="example-5" class="anchor" href="#example-5"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>// Set the run intervall to 15 minutes
-Cron::setRunInterval(15);
-// Or set the run intervall to 30 minutes
-Cron::setRunInterval(30);
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="c1">// Set the run intervall to 15 minutes</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setRunInterval</span><span class="p">(</span><span class="mi">15</span><span class="p">);</span>
+<span class="c1">// Or set the run intervall to 30 minutes</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setRunInterval</span><span class="p">(</span><span class="mi">30</span><span class="p">);</span>
+</pre></div>
 
 <h4>
 <a name="getter-1" class="anchor" href="#getter-1"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -345,21 +345,21 @@ Cron::setRunInterval(30);
 
 <p>The Laravel logging facilities provide a layer on top of Monolog. By default, Laravel is configured to create daily log files for your application, and these files are stored in <code>app/storage/logs</code>. Cron will use Laravel logging facilities by default. You can disable this by setting the <code>laravelLogging</code> config.php value to false or call at runtime the <strong>setLaravelLogging</strong> function.</p>
 
-<pre><code>public static function setLaravelLogging($bool) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setLaravelLogging</span><span class="p">(</span><span class="nv">$bool</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <p><strong>NOTE</strong>: You can add a custom Monolog logger to Cron and enable Laravel logging. In this case all messages will be logged to Laravel and to your custom Monolog logger object.</p>
 
 <h4>
 <a name="example-6" class="anchor" href="#example-6"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>// Laravel logging is enabled by default
-Cron::run();
-// Disable Laravel logging
-Cron::setLaravelLogging(false);
-// Laravel logging is disabled
-Cron::run();
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="c1">// Laravel logging is enabled by default</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">run</span><span class="p">();</span>
+<span class="c1">// Disable Laravel logging</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setLaravelLogging</span><span class="p">(</span><span class="k">false</span><span class="p">);</span>
+<span class="c1">// Laravel logging is disabled</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">run</span><span class="p">();</span>
+</pre></div>
 
 <h4>
 <a name="getter-2" class="anchor" href="#getter-2"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -373,18 +373,18 @@ Cron::run();
 
 <p>If you want to add a custom Monolog logger object to Cron use the static <strong>setLogger</strong> method.</p>
 
-<pre><code>public static function setLogger(\Monolog\Logger $logger = null) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setLogger</span><span class="p">(</span><span class="nx">\Monolog\Logger</span> <span class="nv">$logger</span> <span class="o">=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <p><strong>NOTE</strong>: If you want to remove the logger, just call the <strong>setLogger</strong> method without parameters.</p>
 
 <h4>
 <a name="example-7" class="anchor" href="#example-7"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>Cron::setLogger(new \Monolog\Logger('cronLogger'));
-// And remove the logger again
-Cron::setLogger();
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nx">Cron</span><span class="o">::</span><span class="na">setLogger</span><span class="p">(</span><span class="k">new</span> <span class="nx">\Monolog\Logger</span><span class="p">(</span><span class="s1">'cronLogger'</span><span class="p">));</span>
+<span class="c1">// And remove the logger again</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setLogger</span><span class="p">();</span>
+</pre></div>
 
 <h4>
 <a name="getter-3" class="anchor" href="#getter-3"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -398,14 +398,14 @@ Cron::setLogger();
 
 <p>By default database logging is enabled and after each cron run a manager object and job objects will be saved to database. We strongly recommend to keep the database logging activated because only with this option Cron can check if the current run is in time. It could make sense in some cases to deactivate the database logging with the <strong>setDatabaseLogging</strong> method.</p>
 
-<pre><code>public static function setDatabaseLogging($bool) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setDatabaseLogging</span><span class="p">(</span><span class="nv">$bool</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-8" class="anchor" href="#example-8"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>Cron::setDatabaseLogging(false);
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nx">Cron</span><span class="o">::</span><span class="na">setDatabaseLogging</span><span class="p">(</span><span class="k">false</span><span class="p">);</span>
+</pre></div>
 
 <h4>
 <a name="getter-4" class="anchor" href="#getter-4"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -419,15 +419,15 @@ Cron::setLogger();
 
 <p>By default Cron will log all jobs to database. Maybe sometimes you want to log only error jobs (which not return null) to database by using the static <strong>setLogOnlyErrorJobsToDatabase</strong> function. </p>
 
-<pre><code>public static function setLogOnlyErrorJobsToDatabase($bool) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setLogOnlyErrorJobsToDatabase</span><span class="p">(</span><span class="nv">$bool</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-9" class="anchor" href="#example-9"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>// Log only error jobs to database
-Cron::setLogOnlyErrorJobsToDatabase(true);
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="c1">// Log only error jobs to database</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setLogOnlyErrorJobsToDatabase</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
+</pre></div>
 
 <h4>
 <a name="getter-5" class="anchor" href="#getter-5"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -441,15 +441,15 @@ Cron::setLogOnlyErrorJobsToDatabase(true);
 
 <p>Cron can delete old database entries for you. During each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the <strong>setDeleteDatabaseEntriesAfter</strong> function. The default value is 240 hours (10 days). To disable the deletion of old entries just set the reference value to 0.</p>
 
-<pre><code>public static function setDeleteDatabaseEntriesAfter($hours) {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setDeleteDatabaseEntriesAfter</span><span class="p">(</span><span class="nv">$hours</span><span class="p">)</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-10" class="anchor" href="#example-10"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>// Set the delete database entries reference value to 10 days (24 hours x 10 days)
-Cron::setDeleteDatabaseEntriesAfter(240);
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="c1">// Set the delete database entries reference value to 10 days (24 hours x 10 days)</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setDeleteDatabaseEntriesAfter</span><span class="p">(</span><span class="mi">240</span><span class="p">);</span>
+</pre></div>
 
 <h4>
 <a name="getter-6" class="anchor" href="#getter-6"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -463,19 +463,19 @@ Cron::setDeleteDatabaseEntriesAfter(240);
 
 <p>Cron can prevent overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will execute jobs at the same time. When running a job twice at the same time, side effects can occur. Cron can avoid such overlaps by using simple locking techniques.</p>
 
-<pre><code>public static function setEnablePreventOverlapping() {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">setEnablePreventOverlapping</span><span class="p">()</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-11" class="anchor" href="#example-11"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>// The configuration could be set via config.php file with the key 'preventOverlapping' or via method
-Cron::setEnablePreventOverlapping();
-// Now the Cron run will only run once at the same time
+<div class="highlight highlight-php"><pre><span class="c1">// The configuration could be set via config.php file with the key 'preventOverlapping' or via method</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setEnablePreventOverlapping</span><span class="p">();</span>
+<span class="c1">// Now the Cron run will only run once at the same time</span>
 
-Cron::setDisablePreventOverlapping();
-// Prevent overlapping is disabled and many Cron run executions are possible at the same time
-</code></pre>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setDisablePreventOverlapping</span><span class="p">();</span>
+<span class="c1">// Prevent overlapping is disabled and many Cron run executions are possible at the same time</span>
+</pre></div>
 
 <h4>
 <a name="getter-7" class="anchor" href="#getter-7"><span class="octicon octicon-link"></span></a>Getter</h4>
@@ -530,21 +530,21 @@ Cron::setDisablePreventOverlapping();
 
 <p>To reset the cron management, call the static <strong>reset</strong> method. It will reset all variables to the default values.</p>
 
-<pre><code>public static function reset() {
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">reset</span><span class="p">()</span> <span class="p">{</span>
+</pre></div>
 
 <h4>
 <a name="example-12" class="anchor" href="#example-12"><span class="octicon octicon-link"></span></a>Example</h4>
 
-<pre><code>Cron::add('example1', '* * * * *', function() {
-                    // Do some crazy things successfully every minute
-                    return null;
-                });
-Cron::setLogger(new \Monolog\Logger('cronLogger'));
-Cron::reset();
-// Cron::remove('example1') === false
-// Cron::getLogger() === NULL
-</code></pre>
+<div class="highlight highlight-php"><pre><span class="nx">Cron</span><span class="o">::</span><span class="na">add</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">,</span> <span class="s1">'* * * * *'</span><span class="p">,</span> <span class="k">function</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="c1">// Do some crazy things successfully every minute</span>
+                    <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+                <span class="p">});</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">setLogger</span><span class="p">(</span><span class="k">new</span> <span class="nx">\Monolog\Logger</span><span class="p">(</span><span class="s1">'cronLogger'</span><span class="p">));</span>
+<span class="nx">Cron</span><span class="o">::</span><span class="na">reset</span><span class="p">();</span>
+<span class="c1">// Cron::remove('example1') === false</span>
+<span class="c1">// Cron::getLogger() === NULL</span>
+</pre></div>
 
 <hr><p><a name="faq"></a></p>
 
