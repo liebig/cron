@@ -131,7 +131,7 @@ If your hosting provider grants you shell access or you can manage cron jobs wit
 
 Adding a cron job to Cron is very easy by using the static **add** function. As parameter the **name** of the cron job, the cron **expression** and an anonymous **function** is needed. The boolean **isEnabled** is optional and can enable or disable this cron job from execution (default is enabled).
 
-```
+```php
 public static function add($name, $expression, $function, $isEnabled = true) {
 ```
 
@@ -156,7 +156,7 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
 
 #### Example
 
-```
+```php
 Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
@@ -174,13 +174,13 @@ Cron::add('example2', '*/2 * * * *', function() {
 
 To remove a set cron job on runtime use the **remove** method with the cron job name as string parameter.
 
-```
+```php
 public static function remove($name) {
 ```
 
 #### Example
 
-```
+```php
 Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
@@ -195,16 +195,16 @@ Cron::remove('example1');
 
 After adding an enabled or disabled cron job ($isEnabled boolean parameter of the add method call) you can disable or enable a cron job by name. For this use the **setEnableJob** or **setDisableJob** function.
 
-```
+```php
 public static function setEnableJob($jobname, $enable = true) {
 ```
-```
+```php
 public static function setDisableJob($jobname) {
 ```
 
 #### Example
 
-```
+```php
 Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
@@ -229,13 +229,13 @@ To receive the enable status boolean of a job, use the static `isJobEnabled($job
 
 Running the cron jobs is as easy as adding them. Just call the static **run** method and wait until each added cron job expression is checked. As soon as the time of the expression has come, the corresponding cron job will be invoked. That is the Cron magic. The **run** method returns a detailed report. By default Cron reckons that you call this method every minute (* * * * *) and by default the report (with their cron jobs errors) will be logged to database. You can change this interval using the `setRunInterval` function.
 
-```
+```php
 public static function run() {
 ```
 
 #### Example
 
-```
+```php
 $report = Cron::run();
 ```
 
@@ -247,7 +247,7 @@ $report = Cron::run();
 
 The run interval is the time between two cron job route calls. Some cron service provider only supports calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.
 
-```
+```php
 public static function setRunInterval($minutes) {
 ```
 
@@ -255,7 +255,7 @@ public static function setRunInterval($minutes) {
 
 #### Example
 
-```
+```php
 // Set the run intervall to 15 minutes
 Cron::setRunInterval(15);
 // Or set the run intervall to 30 minutes
@@ -273,7 +273,7 @@ To recieve the current set run interval use the static `getRunInterval()` method
 
 The Laravel logging facilities provide a layer on top of Monolog. By default, Laravel is configured to create daily log files for your application, and these files are stored in `app/storage/logs`. Cron will use Laravel logging facilities by default. You can disable this by setting the `laravelLogging` config.php value to false or call at runtime the **setLaravelLogging** function.
 
-```
+```php
 public static function setLaravelLogging($bool) {
 ```
 
@@ -281,7 +281,7 @@ public static function setLaravelLogging($bool) {
 
 #### Example
 
-```
+```php
 // Laravel logging is enabled by default
 Cron::run();
 // Disable Laravel logging
@@ -302,7 +302,7 @@ To recieve the enabled or disabled boolean value use the static `isLaravelLoggin
 
 If you want to add a custom Monolog logger object to Cron use the static **setLogger** method.
 
-```
+```php
 public static function setLogger(\Monolog\Logger $logger = null) {
 ```
 
@@ -310,7 +310,7 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 
 #### Example
 
-```
+```php
 Cron::setLogger(new \Monolog\Logger('cronLogger'));
 // And remove the logger again
 Cron::setLogger();
@@ -327,13 +327,13 @@ To recieve the set logger object use the static `getLogger()` method. If no logg
 
 By default database logging is enabled and after each cron run a manager object and job objects will be saved to database. We strongly recommend to keep the database logging activated because only with this option Cron can check if the current run is in time. It could make sense in some cases to deactivate the database logging with the **setDatabaseLogging** method.
 
-```
+```php
 public static function setDatabaseLogging($bool) {
 ```
 
 #### Example
 
-```
+```php
 Cron::setDatabaseLogging(false);
 ```
 
@@ -348,13 +348,13 @@ To receive the current boolean value of the logging to database variable, just u
 
 By default Cron will log all jobs to database. Maybe sometimes you want to log only error jobs (which not return null) to database by using the static **setLogOnlyErrorJobsToDatabase** function. 
 
-```
+```php
 public static function setLogOnlyErrorJobsToDatabase($bool) {
 ```
 
 #### Example
 
-```
+```php
 // Log only error jobs to database
 Cron::setLogOnlyErrorJobsToDatabase(true);
 ```
@@ -370,13 +370,13 @@ To receive the current boolean value of the error job logging, use the static `i
 
 Cron can delete old database entries for you. During each run method call, Cron checks if there are old manager and job entries in the database and if the reference value is reached, the entries will be deleted. You can change the reference value by calling the **setDeleteDatabaseEntriesAfter** function. The default value is 240 hours (10 days). To disable the deletion of old entries just set the reference value to 0.
 
-```
+```php
 public static function setDeleteDatabaseEntriesAfter($hours) {
 ```
 
 #### Example
 
-```
+```php
 // Set the delete database entries reference value to 10 days (24 hours x 10 days)
 Cron::setDeleteDatabaseEntriesAfter(240);
 ```
@@ -392,13 +392,13 @@ To receive the current reference value just use the static `getDeleteDatabaseEnt
 
 Cron can prevent overlapping. If this is enabled, only one Cron instance can run at the same time. For example if some jobs need 5 minutes for execution but the Cron route will be called every minute, without preventing overlapping two Cron instances will execute jobs at the same time. When running a job twice at the same time, side effects can occur. Cron can avoid such overlaps by using simple locking techniques.
 
-```
+```php
 public static function setEnablePreventOverlapping() {
 ```
 
 #### Example
 
-```
+```php
 // The configuration could be set via config.php file with the key 'preventOverlapping' or via method
 Cron::setEnablePreventOverlapping();
 // Now the Cron run will only run once at the same time
@@ -451,13 +451,13 @@ Cron brings you the following Laravel commands.
 
 To reset the cron management, call the static **reset** method. It will reset all variables to the default values.
 
-```
+```php
 public static function reset() {
 ```
 
 #### Example
 
-```
+```php
 Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
