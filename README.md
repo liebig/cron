@@ -487,7 +487,7 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 <a name="changelog"></a>
 ## Changelog
 
-### To be announced - 1.0.0
+### 2014/06/12 - 1.0.0
 * Adding Laravel route with security token
 * Adding Artisan command for generating security token
 * Adding Artisan command for running Cron easily with e.g. crontab
