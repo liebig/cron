@@ -363,10 +363,9 @@ class Cron {
                 } else {
                     $jobEntry->return = 'false';
                 }
-                // If the type is integer, double or string we can cast it to String and save it to the error database object
+                // If the type is integer, double or string we can cast it to String and save it to the database object
             } else if ($returnType === 'integer' || $returnType === 'double' || $returnType === 'string') {
-                // We cut the string at 500 characters to not overcharge the database
-                $jobEntry->return = substr((string) $job['return'], 0, 500);
+                $jobEntry->return = (string) $job['return'];
             } else {
                 $jobEntry->return = 'Return object type is ' . $returnType;
             }
