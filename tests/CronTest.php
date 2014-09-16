@@ -1221,9 +1221,9 @@ class CronTest extends TestCase {
         
         $result = array();
         
-        \Event::listen('cron.afterRun', function($jobArray) use (&$result) {
+        \Event::listen('cron.afterRun', function($rundate, $inTime, $runtime, $errors, $crons) use (&$result) {
 
-            array_push($result, $jobArray);
+            array_push($result, array($rundate, $inTime, $runtime, $errors, $crons));
         });
         
         \Event::listen('cron.collectJobs', function() use (&$result) {
@@ -1268,11 +1268,16 @@ class CronTest extends TestCase {
         $this->assertEquals('Job', $result[2]);
         $this->assertEquals('Job', $result[3]);
         
+        // [0]$rundate, [1]$inTime, [2]$runtime, [3]$errors, [4]$crons
         $this->assertEquals(true, is_array($result[4]));
-        $this->assertEquals(1, $result[4]['errors']);
-        $this->assertEquals(2, count($result[4]['crons']));
-        $this->assertEquals('test1', $result[4]['crons'][0]['name']);
-        $this->assertEquals('No', $result[4]['crons'][0]['return']);
+        // Errors
+        $this->assertEquals(1, $result[4][3]);
+        // Crons
+        $this->assertEquals(2, count($result[4][4]));
+        // Crons -> first -> name
+        $this->assertEquals('test1', $result[4][4][0]['name']);
+        // Crons -> first -> return
+        $this->assertEquals('No', $result[4][4][0]['return']);
         
         $this->assertEquals(1, count($successArray));
         $this->assertEquals('test2', $successArray[0]);
@@ -1280,6 +1285,50 @@ class CronTest extends TestCase {
         $this->assertEquals(1, count($errorArray));
         $this->assertEquals('test1', $errorArray[0]);
     }
+    
+    /**
+     *  Tests the Cron run events
+     *
+     *  @covers \Liebig\Cron\Cron::run
+     */
+    public function testAfterRunEvent() {
+        
+        $result = array();
+        \Event::listen('cron.afterRun', function($rundate, $inTime, $runtime, $errors, $crons, $lastRun) use (&$result) {
+
+            array_push($result, array($rundate, $inTime, $runtime, $errors, $crons, $lastRun));
+        });
+        
+        Cron::add('test1', "* * * * *", function() {
+                return 'Test 1 done';
+            });
+
+        Cron::add('test2', "* * * * *", function() {
+        });
+
+        $firstRun = Cron::run();
+        $this->assertEquals(-1, $firstRun['inTime']);
+        $this->assertEquals(1, $firstRun['errors']);
+        
+        sleep(5);
+        
+        $secondRun = Cron::run();
+        $this->assertEquals(false, $secondRun['inTime']);
+        $this->assertEquals(1, $secondRun['errors']);
+        
+        // inTime
+        $this->assertEquals(-1, $result[0][1]);
+        $this->assertEquals(false, $result[1][1]);
+        
+        // errors
+        $this->assertEquals(1, $result[0][3]);
+        $this->assertEquals(1, $result[1][3]);
+        
+        // lastRun
+        $secondRundate = new \DateTime($result[1][5]['rundate']);
+        $this->assertEquals($firstRun['rundate'], $secondRundate->getTimestamp());
+    }
+    
     
     /**
      *  Tests the Cron run command

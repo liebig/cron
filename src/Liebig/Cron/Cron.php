@@ -330,8 +330,13 @@ class Cron {
         
         $returnArray = array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
         
+        // If Cron was called before, add the latest call to the $returnArray 
+        if (isset($lastManager[0]) && !empty($lastManager[0])) {
+            $returnArray['lastRun'] = array('rundate' => $lastManager[0]->rundate, 'runtime' => $lastManager[0]->runtime);
+        }
+        
         // Fire event after the Cron run was executed
-        \Event::fire('cron.afterRun', array($returnArray));
+        \Event::fire('cron.afterRun', $returnArray);
 
         // Return the cron jobs array (including rundate, in-time boolean, runtime in seconds, number of errors and an array with the cron jobs reports)
         return $returnArray;
