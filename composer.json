@@ -15,7 +15,7 @@
         "mtdowling/cron-expression": "1.*"
     }, 
     "require-dev": {
-        "illuminate/support": "4.0.x"
+        "illuminate/support": "4.0.x|~5.0"
     },
     "autoload": {
         "classmap": [
