@@ -159,8 +159,8 @@ class Cron {
                     }
                     
                     // Fire the after run event, because we are done here
-                    \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array()));
-                    return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array());
+                    \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array()));
+                    return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array());
                 } else {
 
                     // Create lock file
@@ -333,6 +333,8 @@ class Cron {
         // If Cron was called before, add the latest call to the $returnArray 
         if (isset($lastManager[0]) && !empty($lastManager[0])) {
             $returnArray['lastRun'] = array('rundate' => $lastManager[0]->rundate, 'runtime' => $lastManager[0]->runtime);
+        } else {
+            $returnArray['lastRun'] = array();
         }
         
         // Fire event after the Cron run was executed

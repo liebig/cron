@@ -1325,6 +1325,7 @@ class CronTest extends TestCase {
         $this->assertEquals(1, $result[1][3]);
         
         // lastRun
+        $this->assertEquals($result[0][5], array());
         $secondRundate = new \DateTime($result[1][5]['rundate']);
         $this->assertEquals($firstRun['rundate'], $secondRundate->getTimestamp());
     }
