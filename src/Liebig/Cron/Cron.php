@@ -123,225 +123,247 @@ class Cron {
      * @return array Return an array with the rundate, runtime, errors and a result cron job array (with name, function return value, runtime in seconds)
      */
     public static function run($checkRundateOnce = true) {
-        // Get the rundate
-        $runDate = new \DateTime();
         
-        // Fire event before the Cron run will be executed
-        \Event::fire('cron.beforeRun', array($runDate->getTimestamp()));
-
-        // Check if prevent job overlapping is enabled and create lock file if true
-        $preventOverlapping = \Config::get('cron::preventOverlapping');
         // If a new lock file is created, $overlappingLockFile will be equals the file path
         $overlappingLockFile = "";
-        if (is_bool($preventOverlapping) && $preventOverlapping) {
+            
+        try {
+            // Get the rundate
+            $runDate = new \DateTime();
 
-            $storagePath = "";
-            // Fallback function for Laravel3 with helper function path('storage')
-            if (function_exists('storage_path')) {
-                $storagePath = storage_path();
-            } else if (function_exists('path')) {
-                $storagePath = path('storage');
-            }
+            // Fire event before the Cron run will be executed
+            \Event::fire('cron.beforeRun', array($runDate->getTimestamp()));
 
-            if (!empty($storagePath)) {
+            // Check if prevent job overlapping is enabled and create lock file if true
+            $preventOverlapping = \Config::get('cron::preventOverlapping');
+            
+            if (is_bool($preventOverlapping) && $preventOverlapping) {
 
-                $lockFile = $storagePath . DIRECTORY_SEPARATOR . 'cron.lock';
+                $storagePath = "";
+                // Fallback function for Laravel3 with helper function path('storage')
+                if (function_exists('storage_path')) {
+                    $storagePath = storage_path();
+                } else if (function_exists('path')) {
+                    $storagePath = path('storage');
+                }
 
-                if (file_exists($lockFile)) {
-                    self::log('warning', 'Lock file found - Cron is still running and prevent job overlapping is enabled - second Cron run will be terminated.');
+                if (!empty($storagePath)) {
 
-                    if (self::isDatabaseLogging()) {
-                        // Create a new cronmanager database object with runtime -1
-                        $cronmanager = new\Liebig\Cron\Models\Manager();
-                        $cronmanager->rundate = $runDate;
-                        $cronmanager->runtime = -1;
-                        $cronmanager->save();
-                    }
-                    
-                    // Fire the after run event, because we are done here
-                    \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array()));
-                    return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array());
-                } else {
+                    $lockFile = $storagePath . DIRECTORY_SEPARATOR . 'cron.lock';
 
-                    // Create lock file
-                    touch($lockFile);
+                    if (file_exists($lockFile)) {
+                        self::log('warning', 'Lock file found - Cron is still running and prevent job overlapping is enabled - second Cron run will be terminated.');
 
-                    if (!file_exists($lockFile)) {
-                        self::log('error', 'Could not create Cron lock file at ' . $lockFile . '.');
+                        if (self::isDatabaseLogging()) {
+                            // Create a new cronmanager database object with runtime -1
+                            $cronmanager = new\Liebig\Cron\Models\Manager();
+                            $cronmanager->rundate = $runDate;
+                            $cronmanager->runtime = -1;
+                            $cronmanager->save();
+                        }
+
+                        // Fire the after run event, because we are done here
+                        \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array()));
+                        return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array());
                     } else {
-                        // Lockfile created successfully
-                        // $overlappingLockFile is used to delete the lock file after Cron run
-                        $overlappingLockFile = $lockFile;
+
+                        // Create lock file
+                        touch($lockFile);
+
+                        if (!file_exists($lockFile)) {
+                            self::log('error', 'Could not create Cron lock file at ' . $lockFile . '.');
+                        } else {
+                            // Lockfile created successfully
+                            // $overlappingLockFile is used to delete the lock file after Cron run
+                            $overlappingLockFile = $lockFile;
+                        }
                     }
-                }
-            } else {
-                self::log('error', 'Could not get the path to the Laravel storage directory.');
-            }
-        }
-
-        // Get the run interval from Laravel config
-        $runInterval = self::getRunInterval();
-
-        // Getting last run time only if database logging is enabled
-        if (self::isDatabaseLogging()) {
-            // Get the time (in seconds) between this and the last run and save this to $timeBetween
-            $lastManager = \Liebig\Cron\Models\Manager::orderBy('rundate', 'DESC')->take(1)->get();
-            if (!empty($lastManager[0])) {
-                $lastRun = new \DateTime($lastManager[0]->rundate);
-                $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
-            } else {
-                // No previous cron job runs were found
-                $timeBetween = -1;
-            }
-        } else {
-            // If database logging is disabled
-            // Cannot check if the cron run is in time
-            $inTime = -1;
-        }
-        
-        // Initialize the job and job error array and start the runtime calculation
-        $allJobs = array();
-        $errorJobs = array();
-        $beforeAll = microtime(true);
-
-        // Should we check if the cron expression is due once at method call
-        if ($checkRundateOnce) {
-            $checkTime = $runDate;
-        } else {
-            // or do we compare it to 'now'
-            $checkTime = 'now';
-        }
-
-        // For all defined cron jobs run this
-        foreach (self::$cronJobs as $job) {
-
-            // If the job is enabled and if the time for this job has come
-            if ($job['enabled'] && $job['expression']->isDue($checkTime)) {
-
-                // Get the start time of the job runtime
-                $beforeOne = microtime(true);
-
-                // Run the function and save the return to $return - all the magic goes here
-                try {
-                    $return = $job['function']();
-                } catch (\Exception $e) {
-                    // If an uncatched  exception occurs
-                    $return = 'Exception in job ' . $job['name'] . ': ' . $e->getMessage();
-                }
-
-                // Get the end time of the job runtime
-                $afterOne = microtime(true);
-
-                // If the function returned not null then we assume that there was an error
-                if (!is_null($return)) {
-                    // Add to error array
-                    array_push($errorJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
-                    // Log error job
-                    self::log('error', 'Job with the name ' . $job['name'] . ' was run with errors.');
-                    // Fire event after executing a job with erros
-                    \Event::fire('cron.jobError', array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
                 } else {
-                    // Fire event after executing a job successfully
-                    \Event::fire('cron.jobSuccess', array('name' => $job['name'], 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
+                    self::log('error', 'Could not get the path to the Laravel storage directory.');
                 }
-
-                // Push the information of the ran cron job to the allJobs array (including name, return value, runtime)
-                array_push($allJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
             }
-        }
 
-        // Get the end runtime after all cron job executions
-        $afterAll = microtime(true);
+            // Get the run interval from Laravel config
+            $runInterval = self::getRunInterval();
 
-        // If database logging is enabled, save manager und jobs to db
-        if (self::isDatabaseLogging()) {
-
-            // Create a new cronmanager database object for this run and save it
-            $cronmanager = new\Liebig\Cron\Models\Manager();
-            $cronmanager->rundate = $runDate;
-            $cronmanager->runtime = $afterAll - $beforeAll;
-            $cronmanager->save();
-
-            // If the Cron run in time check is enabled, verify the time between the current and the last Cron run ($timeBetween) and compare it with the run interval
-            if (self::isInTimeCheck()) {
-                $inTime = false;
-                // Check if the run between this and the last run is in time (30 seconds tolerance) and log this event
-                if ($timeBetween === -1) {
-                    self::log('notice', 'Cron run with manager id ' . $cronmanager->id . ' has no previous managers.');
-                    $inTime = -1;
-                } elseif (($runInterval * 60) - $timeBetween < -30) {
-                    self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
-                    $inTime = false;
-                } elseif (($runInterval * 60) - $timeBetween > 30) {
-                    self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
-                    $inTime = false;
+            // Getting last run time only if database logging is enabled
+            if (self::isDatabaseLogging()) {
+                // Get the time (in seconds) between this and the last run and save this to $timeBetween
+                $lastManager = \Liebig\Cron\Models\Manager::orderBy('rundate', 'DESC')->take(1)->get();
+                if (!empty($lastManager[0])) {
+                    $lastRun = new \DateTime($lastManager[0]->rundate);
+                    $timeBetween = $runDate->getTimestamp() - $lastRun->getTimestamp();
                 } else {
-                    self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
-                    $inTime = true;
+                    // No previous cron job runs were found
+                    $timeBetween = -1;
                 }
             } else {
+                // If database logging is disabled
+                // Cannot check if the cron run is in time
                 $inTime = -1;
             }
 
-            if (self::isLogOnlyErrorJobsToDatabase()) {
-                // Save error jobs only to database
-                self::saveJobsFromArrayToDatabase($errorJobs, $cronmanager->id);
+            // Initialize the job and job error array and start the runtime calculation
+            $allJobs = array();
+            $errorJobs = array();
+            $beforeAll = microtime(true);
+
+            // Should we check if the cron expression is due once at method call
+            if ($checkRundateOnce) {
+                $checkTime = $runDate;
             } else {
-                // Save all jobs to database
-                self::saveJobsFromArrayToDatabase($allJobs, $cronmanager->id);
+                // or do we compare it to 'now'
+                $checkTime = 'now';
             }
 
-            // Log the result of the cron run
-            if (empty($errorJobs)) {
-                self::log('info', 'The cron run with the manager id ' . $cronmanager->id . ' was finished without errors.');
-            } else {
-                self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($errorJobs) . ' errors.');
+            // For all defined cron jobs run this
+            foreach (self::$cronJobs as $job) {
+
+                // If the job is enabled and if the time for this job has come
+                if ($job['enabled'] && $job['expression']->isDue($checkTime)) {
+
+                    // Get the start time of the job runtime
+                    $beforeOne = microtime(true);
+
+                    // Run the function and save the return to $return - all the magic goes here
+                    try {
+                        $return = $job['function']();
+                    } catch (\Exception $e) {
+                        // If an uncatched  exception occurs
+                        $return = 'Exception in job ' . $job['name'] . ': ' . $e->getMessage();
+                    }
+
+                    // Get the end time of the job runtime
+                    $afterOne = microtime(true);
+
+                    // If the function returned not null then we assume that there was an error
+                    if (!is_null($return)) {
+                        // Add to error array
+                        array_push($errorJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
+                        // Log error job
+                        self::log('error', 'Job with the name ' . $job['name'] . ' was run with errors.');
+                        // Fire event after executing a job with erros
+                        \Event::fire('cron.jobError', array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
+                    } else {
+                        // Fire event after executing a job successfully
+                        \Event::fire('cron.jobSuccess', array('name' => $job['name'], 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
+                    }
+
+                    // Push the information of the ran cron job to the allJobs array (including name, return value, runtime)
+                    array_push($allJobs, array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne)));
+                }
             }
 
-            // Check for old database entires and delete them
-            self::deleteOldDatabaseEntries();
-        } else {
-            // If database logging is disabled
-            // Log the status of the cron job run without the cronmanager id
-            if (empty($errorJobs)) {
-                self::log('info', 'Cron run was finished without errors.');
-            } else {
-                self::log('error', 'Cron run was finished with ' . count($errorJobs) . ' errors.');
-            }
-        }
+            // Get the end runtime after all cron job executions
+            $afterAll = microtime(true);
 
-        // Removing overlapping lock file if lockfile was created
-        if (!empty($overlappingLockFile)) {
+            // If database logging is enabled, save manager und jobs to db
+            if (self::isDatabaseLogging()) {
 
-            if (file_exists($overlappingLockFile)) {
-                if (is_writable($overlappingLockFile)) {
-                    unlink($overlappingLockFile);
+                // Create a new cronmanager database object for this run and save it
+                $cronmanager = new\Liebig\Cron\Models\Manager();
+                $cronmanager->rundate = $runDate;
+                $cronmanager->runtime = $afterAll - $beforeAll;
+                $cronmanager->save();
 
-                    if (file_exists($overlappingLockFile)) {
-                        self::log('critical', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' - please delete this file manually - as long as this lock file exists, Cron will not run.');
+                // If the Cron run in time check is enabled, verify the time between the current and the last Cron run ($timeBetween) and compare it with the run interval
+                if (self::isInTimeCheck()) {
+                    $inTime = false;
+                    // Check if the run between this and the last run is in time (30 seconds tolerance) and log this event
+                    if ($timeBetween === -1) {
+                        self::log('notice', 'Cron run with manager id ' . $cronmanager->id . ' has no previous managers.');
+                        $inTime = -1;
+                    } elseif (($runInterval * 60) - $timeBetween < -30) {
+                        self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too late.');
+                        $inTime = false;
+                    } elseif (($runInterval * 60) - $timeBetween > 30) {
+                        self::log('error', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run too fast.');
+                        $inTime = false;
+                    } else {
+                        self::log('info', 'Cron run with manager id ' . $cronmanager->id . ' is with ' . $timeBetween . ' seconds between last run in time.');
+                        $inTime = true;
                     }
                 } else {
-                    self::log('critical', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' because it is not writable - please delete this file manually - as long as this lock file exists, Cron will not run.');
+                    $inTime = -1;
+                }
+
+                if (self::isLogOnlyErrorJobsToDatabase()) {
+                    // Save error jobs only to database
+                    self::saveJobsFromArrayToDatabase($errorJobs, $cronmanager->id);
+                } else {
+                    // Save all jobs to database
+                    self::saveJobsFromArrayToDatabase($allJobs, $cronmanager->id);
+                }
+
+                // Log the result of the cron run
+                if (empty($errorJobs)) {
+                    self::log('info', 'The cron run with the manager id ' . $cronmanager->id . ' was finished without errors.');
+                } else {
+                    self::log('error', 'The cron run with the manager id ' . $cronmanager->id . ' was finished with ' . count($errorJobs) . ' errors.');
+                }
+
+                // Check for old database entires and delete them
+                self::deleteOldDatabaseEntries();
+            } else {
+                // If database logging is disabled
+                // Log the status of the cron job run without the cronmanager id
+                if (empty($errorJobs)) {
+                    self::log('info', 'Cron run was finished without errors.');
+                } else {
+                    self::log('error', 'Cron run was finished with ' . count($errorJobs) . ' errors.');
+                }
+            }
+
+            // Removing overlapping lock file if lockfile was created
+            if (!empty($overlappingLockFile)) {
+                self::deleteLockFile($overlappingLockFile);
+            }
+
+            $returnArray = array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
+
+            // If Cron was called before, add the latest call to the $returnArray 
+            if (isset($lastManager[0]) && !empty($lastManager[0])) {
+                $returnArray['lastRun'] = array('rundate' => $lastManager[0]->rundate, 'runtime' => $lastManager[0]->runtime);
+            } else {
+                $returnArray['lastRun'] = array();
+            }
+
+            // Fire event after the Cron run was executed
+            \Event::fire('cron.afterRun', $returnArray);
+
+            // Return the cron jobs array (including rundate, in-time boolean, runtime in seconds, number of errors and an array with the cron jobs reports)
+            return $returnArray;
+            
+        } catch(\Exception $ex) {
+            // Removing overlapping lock file if lockfile was created
+            if (!empty($overlappingLockFile)) {
+                self::deleteLockFile($overlappingLockFile);
+            }
+
+            throw($ex);
+        }
+    }
+    
+    /**
+     * Delete lock file
+     *
+     * @static
+     * @param  string $file Path and name of the lock file which should be deleted
+     */
+    private static function deleteLockFile($file) {
+        if (file_exists($file)) {
+            if (is_writable($file)) {
+                unlink($file);
+
+                if (file_exists($file)) {
+                    self::log('critical', 'Could not delete Cron lock file at ' . $file . ' - please delete this file manually - as long as this lock file exists, Cron will not run.');
                 }
             } else {
-                self::log('error', 'Could not delete Cron lock file at ' . $overlappingLockFile . ' because file is not found.');
+                self::log('critical', 'Could not delete Cron lock file at ' . $file . ' because it is not writable - please delete this file manually - as long as this lock file exists, Cron will not run.');
             }
-        }
-        
-        $returnArray = array('rundate' => $runDate->getTimestamp(), 'inTime' => $inTime, 'runtime' => ($afterAll - $beforeAll), 'errors' => count($errorJobs), 'crons' => $allJobs);
-        
-        // If Cron was called before, add the latest call to the $returnArray 
-        if (isset($lastManager[0]) && !empty($lastManager[0])) {
-            $returnArray['lastRun'] = array('rundate' => $lastManager[0]->rundate, 'runtime' => $lastManager[0]->runtime);
         } else {
-            $returnArray['lastRun'] = array();
+            self::log('warning', 'Could not delete Cron lock file at ' . $file . ' because file is not found.');
         }
-        
-        // Fire event after the Cron run was executed
-        \Event::fire('cron.afterRun', $returnArray);
-
-        // Return the cron jobs array (including rundate, in-time boolean, runtime in seconds, number of errors and an array with the cron jobs reports)
-        return $returnArray;
     }
 
     /**
