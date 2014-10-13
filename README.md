@@ -487,6 +487,13 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 <a name="changelog"></a>
 ## Changelog
 
+### 2014/10/13 - 1.0.1
+* Adding try-catch-finally block to the run method to always remove the lock file
+* Adding $lastRun parameter to the cron.afterRun event
+* Adding Laravel 5 support
+* Removing return-string truncating after 500 characters
+* Fixing cron.afterRun event
+
 ### 2014/06/12 - 1.0.0
 * Adding Laravel route with security token
 * Adding Artisan command for generating security token
