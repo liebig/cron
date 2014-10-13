@@ -43,7 +43,11 @@
 </li>
 <li>API: <a href="http://liebig.github.io/cron/docs/api/classes/Liebig.Cron.Cron.html">http://liebig.github.io/cron/docs/api/classes/Liebig.Cron.Cron.html</a>
 </li>
-</ul><hr><ul>
+</ul>
+
+<hr>
+
+<ul>
 <li><a href="#raison">Raison d’être</a></li>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#configuration">Configuration</a></li>
@@ -82,7 +86,11 @@
 </li>
 <li><a href="#faq">Frequently Asked Questions</a></li>
 <li><a href="#changelog">Changelog</a></li>
-</ul><hr><p><a name="raison"></a></p>
+</ul>
+
+<hr>
+
+<p><a name="raison"></a></p>
 
 <h2>
 <a name="raison-d%C3%AAtre" class="anchor" href="#raison-d%C3%AAtre"><span class="octicon octicon-link"></span></a>Raison d’être</h2>
@@ -117,7 +125,9 @@
 
 <p>At last, Cron is my personal way to manage job scheduling. I am a web application developer, not an infrastructure guy. I like to handle things in PHP and not in the shell. I want to deploy my application to another server without worrying if I have access to crontab or other Linux tools. I really like Laravels event functionality but don't like Laravel commands. Cron management should be easy and powerful at the same time. And finally, I love to handle things at a single place in my application without using the shell or write a PHP file for each job. Cron is the try to manage cron jobs without headaches.</p>
 
-<hr><p><a name="installation"></a></p>
+<hr>
+
+<p><a name="installation"></a></p>
 
 <h2>
 <a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
@@ -130,7 +140,11 @@
 </li>
 <li> Publish the configuration file with running the command <code>php artisan config:publish liebig/cron</code> - now you find the Cron configuration file at <code>/path/to/laravel/app/config/packages/liebig/cron</code> and this file won't be overwritten at any update</li>
 <li> Now you can use <code>Cron</code> everywhere for free</li>
-</ol><hr><p><a name="configuration"></a></p>
+</ol>
+
+<hr>
+
+<p><a name="configuration"></a></p>
 
 <h2>
 <a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
@@ -149,7 +163,9 @@
 
 <p><strong>NOTE</strong>: All values set via method will overwrite the values loaded from config file.</p>
 
-<hr><p><a name="example"></a></p>
+<hr>
+
+<p><a name="example"></a></p>
 
 <h2>
 <a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h2>
@@ -196,7 +212,9 @@
 
 <p><strong>NOTE:</strong> If you want to use Cron's in time check, which will test if the time between two Cron run method calls are correct, please configure the key <code>runInterval</code>. In our example we call the route every minute so the value should be <code>1</code>.</p>
 
-<hr><p><a name="api"></a></p>
+<hr>
+
+<p><a name="api"></a></p>
 
 <h2>
 <a name="api" class="anchor" href="#api"><span class="octicon octicon-link"></span></a>API</h2>
@@ -243,7 +261,9 @@
                 <span class="p">},</span> <span class="k">true</span><span class="p">);</span>
 </pre></div>
 
-<hr><p><a name="removejob"></a></p>
+<hr>
+
+<p><a name="removejob"></a></p>
 
 <h3>
 <a name="remove-a-cron-job" class="anchor" href="#remove-a-cron-job"><span class="octicon octicon-link"></span></a>Remove a cron job</h3>
@@ -263,7 +283,9 @@
 <span class="nx">Cron</span><span class="o">::</span><span class="na">remove</span><span class="p">(</span><span class="s1">'example1'</span><span class="p">);</span>
 </pre></div>
 
-<hr><p><a name="enabledisable"></a></p>
+<hr>
+
+<p><a name="enabledisable"></a></p>
 
 <h3>
 <a name="enable-or-disable-a-cron-job" class="anchor" href="#enable-or-disable-a-cron-job"><span class="octicon octicon-link"></span></a>Enable or disable a cron job</h3>
@@ -296,7 +318,9 @@
 
 <p>To receive the enable status boolean of a job, use the static <code>isJobEnabled($jobname)</code> method.</p>
 
-<hr><p><a name="runjob"></a></p>
+<hr>
+
+<p><a name="runjob"></a></p>
 
 <h3>
 <a name="run-the-cron-jobs" class="anchor" href="#run-the-cron-jobs"><span class="octicon octicon-link"></span></a>Run the cron jobs</h3>
@@ -314,7 +338,9 @@
 
 <p><strong>NOTE</strong>: The <strong>run</strong> method call has to be the last function call after adding jobs, setting the interval, deactivating database logging and the other function calls.</p>
 
-<hr><h3>
+<hr>
+
+<h3>
 <a name="set-the-run-interval" class="anchor" href="#set-the-run-interval"><span class="octicon octicon-link"></span></a>Set the run interval</h3>
 
 <p>The run interval is the time between two cron job route calls. Some cron service provider only supports calls every 15 or even 30 minutes. In this case you have to set this value to 15 or 30. This value is only important to determine if the current run call is in time. If you have disabled database logging in general, you don't have to care about this.</p>
@@ -338,7 +364,9 @@
 
 <p>To recieve the current set run interval use the static <code>getRunInterval()</code> method.</p>
 
-<hr><p><a name="enablelarvellogging"></a></p>
+<hr>
+
+<p><a name="enablelarvellogging"></a></p>
 
 <h3>
 <a name="enable-or-disable-laravel-logging" class="anchor" href="#enable-or-disable-laravel-logging"><span class="octicon octicon-link"></span></a>Enable or disable Laravel logging</h3>
@@ -366,7 +394,9 @@
 
 <p>To recieve the enabled or disabled boolean value use the static <code>isLaravelLogging()</code> method.</p>
 
-<hr><p><a name="setlogger"></a></p>
+<hr>
+
+<p><a name="setlogger"></a></p>
 
 <h3>
 <a name="set-a-monolog-logger" class="anchor" href="#set-a-monolog-logger"><span class="octicon octicon-link"></span></a>Set a Monolog logger</h3>
@@ -391,7 +421,9 @@
 
 <p>To recieve the set logger object use the static <code>getLogger()</code> method. If no logger object is set, null will be returned. </p>
 
-<hr><p><a name="disabledatabaselogging"></a></p>
+<hr>
+
+<p><a name="disabledatabaselogging"></a></p>
 
 <h3>
 <a name="disable-database-logging" class="anchor" href="#disable-database-logging"><span class="octicon octicon-link"></span></a>Disable database logging</h3>
@@ -412,7 +444,9 @@
 
 <p>To receive the current boolean value of the logging to database variable, just use the static <code>isDatabaseLogging()</code> function.</p>
 
-<hr><p><a name="logonlyerrorjobstodatabase"></a></p>
+<hr>
+
+<p><a name="logonlyerrorjobstodatabase"></a></p>
 
 <h3>
 <a name="log-only-error-jobs-to-database" class="anchor" href="#log-only-error-jobs-to-database"><span class="octicon octicon-link"></span></a>Log only error jobs to database</h3>
@@ -434,7 +468,9 @@
 
 <p>To receive the current boolean value of the error job logging, use the static <code>isLogOnlyErrorJobsToDatabase()</code> function.</p>
 
-<hr><p><a name="deleteolddatabaseentries"></a></p>
+<hr>
+
+<p><a name="deleteolddatabaseentries"></a></p>
 
 <h3>
 <a name="delete-old-database-entries" class="anchor" href="#delete-old-database-entries"><span class="octicon octicon-link"></span></a>Delete old database entries</h3>
@@ -456,7 +492,9 @@
 
 <p>To receive the current reference value just use the static <code>getDeleteDatabaseEntriesAfter</code> function.</p>
 
-<hr><p><a name="preventoverlapping"></a></p>
+<hr>
+
+<p><a name="preventoverlapping"></a></p>
 
 <h3>
 <a name="prevent-overlapping" class="anchor" href="#prevent-overlapping"><span class="octicon octicon-link"></span></a>Prevent overlapping</h3>
@@ -484,7 +522,9 @@
 
 <p><strong>NOTE</strong>: To use the overlapping function, Cron needs writing access to the Laravel storage directory. On some Windows machines the lock file cannot be deleted. If you see a delete error message in your log, please disable this feature.</p>
 
-<hr><p><a name="events"></a></p>
+<hr>
+
+<p><a name="events"></a></p>
 
 <h3>
 <a name="events" class="anchor" href="#events"><span class="octicon octicon-link"></span></a>Events</h3>
@@ -501,15 +541,19 @@
 <li>
 <code>cron.jobSuccess</code> - fired after a job was executed and this job did not return an error (return value is equal null). Parameter: <code>$name</code>, <code>$runtime</code>, <code>$rundate</code>.</li>
 <li>
-<code>cron.afterRun</code> - fired after the Cron run was finished. Parameter: <code>$rundate</code>, <code>$inTime</code>, <code>$runtime</code>, <code>$errors</code> - number of error jobs, <code>$crons</code> - array of all exectued jobs with <code>$name</code>, <code>$return</code>, <code>$runtime</code>.</li>
-</ul><p>To subscribe to an event, use Laravels <code>Event</code> facility. The best place for this is the <code>/path/to/laravel/app/start/global.php</code> file.</p>
+<code>cron.afterRun</code> - fired after the Cron run was finished. Parameter: <code>$rundate</code>, <code>$inTime</code>, <code>$runtime</code>, <code>$errors</code> - number of error jobs, <code>$crons</code> - array of all exectued jobs (with the keys <code>$name</code>, <code>$return</code>, <code>$runtime</code>), <code>$lastRun</code> - array with information of the last Cron run (with the keys <code>$rundate</code> and <code>$runtime</code>). The <code>$lastRun</code> parameter is an empty array, if Cron is called the first time or if database logging is disabled and therefore the <code>$inTime</code> parameter is equals <code>-1</code>.</li>
+</ul>
+
+<p>To subscribe to an event, use Laravels <code>Event</code> facility. The best place for this is the <code>/path/to/laravel/app/start/global.php</code> file.</p>
 
 <div class="highlight highlight-php"><pre><span class="nx">Event</span><span class="o">::</span><span class="na">listen</span><span class="p">(</span><span class="s1">'cron.jobError'</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$return</span><span class="p">,</span> <span class="nv">$runtime</span><span class="p">,</span> <span class="nv">$rundate</span><span class="p">){</span>
     <span class="nx">Log</span><span class="o">::</span><span class="na">error</span><span class="p">(</span><span class="s1">'Job with the name '</span> <span class="o">.</span> <span class="nv">$name</span> <span class="o">.</span> <span class="s1">' returned an error.'</span><span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
 
-<hr><p><a name="commands"></a></p>
+<hr>
+
+<p><a name="commands"></a></p>
 
 <h3>
 <a name="commands" class="anchor" href="#commands"><span class="octicon octicon-link"></span></a>Commands</h3>
@@ -523,7 +567,11 @@
 <code>cron:list</code> - fires the <code>cron.collectJobs</code> event and lists all registered Cron jobs.</li>
 <li>
 <code>cron:keygen</code> - generates a security token with 32 characters.</li>
-</ul><hr><p><a name="reset"></a></p>
+</ul>
+
+<hr>
+
+<p><a name="reset"></a></p>
 
 <h3>
 <a name="reset-cron" class="anchor" href="#reset-cron"><span class="octicon octicon-link"></span></a>Reset Cron</h3>
@@ -546,7 +594,9 @@
 <span class="c1">// Cron::getLogger() === NULL</span>
 </pre></div>
 
-<hr><p><a name="faq"></a></p>
+<hr>
+
+<p><a name="faq"></a></p>
 
 <h2>
 <a name="frequently-asked-questions" class="anchor" href="#frequently-asked-questions"><span class="octicon octicon-link"></span></a>Frequently Asked Questions</h2>
@@ -567,10 +617,23 @@
 
 <p>By default Cron prevents overlapping. This means that only one Cron instance will run at the same time. If another instance is called, Cron will not run and will return the runtime and inTime parameter with the value -1. On some Windows machines the deletion of the lock file fails and you have to disable this feature. Please have a look at the <a href="#preventoverlapping">prevent overlapping section</a>.</p>
 
-<hr><p><a name="changelog"></a></p>
+<hr>
+
+<p><a name="changelog"></a></p>
 
 <h2>
 <a name="changelog" class="anchor" href="#changelog"><span class="octicon octicon-link"></span></a>Changelog</h2>
+
+<h3>
+<a name="20141013---101" class="anchor" href="#20141013---101"><span class="octicon octicon-link"></span></a>2014/10/13 - 1.0.1</h3>
+
+<ul>
+<li>Adding try-catch-finally block to the run method to always remove the lock file</li>
+<li>Adding $lastRun parameter to the cron.afterRun event</li>
+<li>Adding Laravel 5 support</li>
+<li>Removing return-string truncating after 500 characters</li>
+<li>Fixing cron.afterRun event</li>
+</ul>
 
 <h3>
 <a name="20140612---100" class="anchor" href="#20140612---100"><span class="octicon octicon-link"></span></a>2014/06/12 - 1.0.0</h3>
@@ -587,27 +650,37 @@
 <li>Generating API</li>
 <li>Refurbishing this README file</li>
 <li>Minor bug fixes</li>
-</ul><h3>
+</ul>
+
+<h3>
 <a name="20140211---v095" class="anchor" href="#20140211---v095"><span class="octicon octicon-link"></span></a>2014/02/11 - v0.9.5</h3>
 
 <ul>
 <li>Bug fixing release</li>
 <li>Fixing bug with PSR0 Autoloading</li>
 <li>Fixing time bug - if a job took more than one minute for execution the following jobs were not handled</li>
-</ul><h3>
+</ul>
+
+<h3>
 <a name="20131112---v094" class="anchor" href="#20131112---v094"><span class="octicon octicon-link"></span></a>2013/11/12 - v0.9.4</h3>
 
 <ul>
 <li>Adding Laravel logging facilities - by default Cron will log to Laravel now</li>
 <li>Adding Exceptions - Cron will throw InvalidArgumentExceptions and UnexpectedValueExceptions now</li>
 <li>Minor bug fixes</li>
-</ul><h3>
+</ul>
+
+<h3>
 <a name="20131101---v093" class="anchor" href="#20131101---v093"><span class="octicon octicon-link"></span></a>2013/11/01 - v0.9.3</h3>
 
 <ul>
 <li>Adding facade for Cron - you can use <code>Cron</code> instead of <code>\Liebig\Cron\Cron</code> now</li>
 <li>Adding facade test cases</li>
-</ul><hr><h2>
+</ul>
+
+<hr>
+
+<h2>
 <a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
 
 <p>The MIT License (MIT)</p>
