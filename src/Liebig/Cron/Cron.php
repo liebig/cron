@@ -161,6 +161,9 @@ class Cron {
                             $cronmanager->runtime = -1;
                             $cronmanager->save();
                         }
+                        
+                        // Fire the Cron locked event
+                        \Event::fire('cron.locked', array('lockfile' => $lockFile));
 
                         // Fire the after run event, because we are done here
                         \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array()));

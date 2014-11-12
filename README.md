@@ -425,6 +425,7 @@ Cron supports Laravel events and provides many information about the run status 
 * `cron.jobError` - fired after a job was exectued and this job returned an error (return value is not equal null). Parameter: `$name`, `$return`, `$runtime`, `$rundate`.
 * `cron.jobSuccess` - fired after a job was executed and this job did not return an error (return value is equal null). Parameter: `$name`, `$runtime`, `$rundate`.
 * `cron.afterRun` - fired after the Cron run was finished. Parameter: `$rundate`, `$inTime`, `$runtime`, `$errors` - number of error jobs, `$crons` - array of all exectued jobs (with the keys `$name`, `$return`, `$runtime`), `$lastRun` - array with information of the last Cron run (with the keys `$rundate` and `$runtime`). The `$lastRun` parameter is an empty array, if Cron is called the first time or if database logging is disabled and therefore the `$inTime` parameter is equals `-1`.
+* `cron.locked` - fired if lock file was found. Parameter: `$lockfile`.
 
 To subscribe to an event, use Laravels `Event` facility. The best place for this is the `/path/to/laravel/app/start/global.php` file.
 ```php
