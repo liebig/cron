@@ -488,6 +488,11 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 <a name="changelog"></a>
 ## Changelog
 
+### 2015/02/02 - 1.0.2
+* Adding cron.locked event
+* Marking Cron as stable
+* Changing $function parameter type to "callable" to fix IDE type hints
+
 ### 2014/10/13 - 1.0.1
 * Adding try-catch-finally block to the run method to always remove the lock file
 * Adding $lastRun parameter to the cron.afterRun event
