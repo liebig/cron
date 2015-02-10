@@ -15,7 +15,8 @@ class CreateCronjobTable extends Migration {
                     $table->string('name');
                     $table->text('return');
                     $table->float('runtime');
-                    $table->integer('cron_manager_id');
+                    $table->integer('cron_manager_id')->unsigned();
+                    $table->index(array('name', 'cron_manager_id'));
                 });
     }
 
