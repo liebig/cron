@@ -2,7 +2,7 @@
 
 namespace Liebig\Cron\Models;
 
-class Manager extends \Eloquent{
+class Manager extends \Illuminate\Database\Eloquent\Model{
     
     protected $table = 'cron_manager';
     public $timestamps = false;
