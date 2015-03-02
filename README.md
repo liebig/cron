@@ -58,6 +58,17 @@ At last, Cron is my personal way to manage job scheduling. I am a web applicatio
 <a name="installation"></a>
 ## Installation
 
+### Laravel 5
+
+1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
+2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory 
+3.  Add `'Liebig\Cron\Laravel5ServiceProvider'` to your `'providers'` array in the `/path/to/laravel/config/app.php` file
+4.  Migrate the database with running the command `php artisan migrate --path=vendor/liebig/cron/src/migrations`
+5.  Publish the configuration file with running the command `php artisan vendor:publish` - now you find the Cron configuration file at `/path/to/laravel/config/liebigCron.php` and this file won't be overwritten at any update
+6.  Now you can use `Cron` everywhere for free
+
+### Laravel 4
+
 1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
 2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory 
 3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `/path/to/laravel/app/config/app.php` file
@@ -76,7 +87,7 @@ Cron is designed to work out of the box without the need of configuration. To en
 You can use the Cron set methods (e.g. `setDatabaseLogging`, `setRunInterval`) to change Cron's behaviour. This changes are temporary and the set methods have to be called every time.
 
 ### Config file
-The behaviour values will be loaded from a config file. You can change this values easily by editing the `/path/to/laravel/app/config/packages/liebig/cron/config.php` file. This is the more permanent way. If you only want to change settings for one run with conditions, we recommend to use the setter methods.
+The behaviour values will be loaded from a config file. You can change this values easily by editing in Laravel 5 the `/path/to/laravel/app/config/liebigCron.php` file and in Laravel 4 the `/path/to/laravel/app/config/packages/liebig/cron/config.php` file. This is the more permanent way. If you only want to change settings for one run with conditions, we recommend to use the setter methods.
 
 **NOTE**: All values set via method will overwrite the values loaded from config file.
 
@@ -86,8 +97,47 @@ The behaviour values will be loaded from a config file. You can change this valu
 ## Example
 
 ### Cron
-If you use Cron's integrated route or command, you only need to listen for the `cron.collectJobs` event. The best place to do this is the `/path/to/laravel/app/start/global.php` file. If you have a development environment configured in your `/path/to/laravel/bootstrap/start.php` file, you may create a `/path/to/laravel/app/start/development.php` file and add the job definitions there.
+If you use Cron's integrated route or command, you only need to listen for the `cron.collectJobs` event. The best place to do this is in Laravel 5 the `/path/to/laravel5/app/Providers/AppServiceProvider.php` file at the `boot` method and in Laravel 4 the `/path/to/laravel/app/start/global.php` file.
 
+#### Laravel 5 - AppServiceProvider.php
+```php
+<?php namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider {
+
+    //...
+
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot() {
+        // Please note the different namespace 
+        // and please add a \ in front of your classes in the global namespace
+        \Event::listen('cron.collectJobs', function() {
+
+            \Cron::add('example1', '* * * * *', function() {
+                // Do some crazy things unsuccessfully every minute
+                return 'No';
+            });
+
+            \Cron::add('example2', '*/2 * * * *', function() {
+                // Do some crazy things successfully every two minute
+                return null;
+            });
+
+            \Cron::add('disabled job', '0 * * * *', function() {
+                // Do some crazy things successfully every hour
+            }, false);
+        });
+    }
+}
+```
+
+#### Laravel 4 - global.php
 ```php
 Event::listen('cron.collectJobs', function() {
     Cron::add('example1', '* * * * *', function() {
@@ -157,11 +207,11 @@ The **isEnabled** boolean parameter makes it possible to deactivate a job from e
 #### Example
 
 ```php
-Cron::add('example1', '* * * * *', function() {
+\Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-Cron::add('example2', '*/2 * * * *', function() {
+\Cron::add('example2', '*/2 * * * *', function() {
                     // Oh no, this job has errors and runs every two minutes
                     return false;
                 }, true);
@@ -181,11 +231,11 @@ public static function remove($name) {
 #### Example
 
 ```php
-Cron::add('example1', '* * * * *', function() {
+\Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-Cron::remove('example1');
+\Cron::remove('example1');
 ```
 
 ---
@@ -205,16 +255,16 @@ public static function setDisableJob($jobname) {
 #### Example
 
 ```php
-Cron::add('example1', '* * * * *', function() {
+\Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-Cron::setDisableJob('example1');
+\Cron::setDisableJob('example1');
 // No jobs will be called
-$report = Cron::run();
-Cron::setEnableJob('example1');
+$report = \Cron::run();
+\Cron::setEnableJob('example1');
 // One job will be called
-$report = Cron::run();
+$report = \Cron::run();
 ```
 
 #### Getter
@@ -236,7 +286,7 @@ public static function run() {
 #### Example
 
 ```php
-$report = Cron::run();
+$report = \Cron::run();
 ```
 
 **NOTE**: The **run** method call has to be the last function call after adding jobs, setting the interval, deactivating database logging and the other function calls.
@@ -257,9 +307,9 @@ public static function setRunInterval($minutes) {
 
 ```php
 // Set the run intervall to 15 minutes
-Cron::setRunInterval(15);
+\Cron::setRunInterval(15);
 // Or set the run intervall to 30 minutes
-Cron::setRunInterval(30);
+\Cron::setRunInterval(30);
 ```
 
 #### Getter
@@ -271,7 +321,7 @@ To recieve the current set run interval use the static `getRunInterval()` method
 <a name="enablelarvellogging"></a>
 ### Enable or disable Laravel logging
 
-The Laravel logging facilities provide a layer on top of Monolog. By default, Laravel is configured to create daily log files for your application, and these files are stored in `app/storage/logs`. Cron will use Laravel logging facilities by default. You can disable this by setting the `laravelLogging` config.php value to false or call at runtime the **setLaravelLogging** function.
+The Laravel logging facilities provide a layer on top of Monolog. By default, Laravel is configured to create daily log files for your application, and these files are stored in `app/storage/logs`. Cron will use Laravel logging facilities by default. You can disable this by setting the `laravelLogging` value to false in the config file or by calling the **setLaravelLogging** function at runtime.
 
 ```php
 public static function setLaravelLogging($bool) {
@@ -283,11 +333,11 @@ public static function setLaravelLogging($bool) {
 
 ```php
 // Laravel logging is enabled by default
-Cron::run();
+\Cron::run();
 // Disable Laravel logging
-Cron::setLaravelLogging(false);
+\Cron::setLaravelLogging(false);
 // Laravel logging is disabled
-Cron::run();
+\Cron::run();
 ```
 
 #### Getter
@@ -311,9 +361,9 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 #### Example
 
 ```php
-Cron::setLogger(new \Monolog\Logger('cronLogger'));
+\Cron::setLogger(new \Monolog\Logger('cronLogger'));
 // And remove the logger again
-Cron::setLogger();
+\Cron::setLogger();
 ```
 
 #### Getter
@@ -334,7 +384,7 @@ public static function setDatabaseLogging($bool) {
 #### Example
 
 ```php
-Cron::setDatabaseLogging(false);
+\Cron::setDatabaseLogging(false);
 ```
 
 #### Getter
@@ -356,7 +406,7 @@ public static function setLogOnlyErrorJobsToDatabase($bool) {
 
 ```php
 // Log only error jobs to database
-Cron::setLogOnlyErrorJobsToDatabase(true);
+\Cron::setLogOnlyErrorJobsToDatabase(true);
 ```
 
 #### Getter
@@ -378,7 +428,7 @@ public static function setDeleteDatabaseEntriesAfter($hours) {
 
 ```php
 // Set the delete database entries reference value to 10 days (24 hours x 10 days)
-Cron::setDeleteDatabaseEntriesAfter(240);
+\Cron::setDeleteDatabaseEntriesAfter(240);
 ```
 
 #### Getter
@@ -399,11 +449,11 @@ public static function setEnablePreventOverlapping() {
 #### Example
 
 ```php
-// The configuration could be set via config.php file with the key 'preventOverlapping' or via method
-Cron::setEnablePreventOverlapping();
+// The configuration could be set via config file with the key 'preventOverlapping' or via method
+\Cron::setEnablePreventOverlapping();
 // Now the Cron run will only run once at the same time
 
-Cron::setDisablePreventOverlapping();
+\Cron::setDisablePreventOverlapping();
 // Prevent overlapping is disabled and many Cron run executions are possible at the same time
 ```
 
@@ -429,8 +479,8 @@ Cron supports Laravel events and provides many information about the run status 
 
 To subscribe to an event, use Laravels `Event` facility. The best place for this is the `/path/to/laravel/app/start/global.php` file.
 ```php
-Event::listen('cron.jobError', function($name, $return, $runtime, $rundate){
-    Log::error('Job with the name ' . $name . ' returned an error.');
+\Event::listen('cron.jobError', function($name, $return, $runtime, $rundate){
+    \Log::error('Job with the name ' . $name . ' returned an error.');
 });
 ```
 
@@ -459,14 +509,14 @@ public static function reset() {
 #### Example
 
 ```php
-Cron::add('example1', '* * * * *', function() {
+\Cron::add('example1', '* * * * *', function() {
                     // Do some crazy things successfully every minute
                     return null;
                 });
-Cron::setLogger(new \Monolog\Logger('cronLogger'));
-Cron::reset();
-// Cron::remove('example1') === false
-// Cron::getLogger() === NULL
+\Cron::setLogger(new \Monolog\Logger('cronLogger'));
+\Cron::reset();
+// \Cron::remove('example1') === false
+// \Cron::getLogger() === NULL
 ```
 
 ---
@@ -488,6 +538,13 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 <a name="changelog"></a>
 ## Changelog
 
+### 2015/03/02 - 1.1.0
+* Adding Laravel 5 support
+* Adding index to 'cron_job' table
+* Removing Eloquent class aliases
+* Changing 'cron_manager_id' column of 'cron_job' table to unsigned
+* Fixing 'setDisableInTimeCheck' method
+
 ### 2015/02/02 - 1.0.2
 * Adding cron.locked event
 * Marking Cron as stable
@@ -496,7 +553,7 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 ### 2014/10/13 - 1.0.1
 * Adding try-catch-finally block to the run method to always remove the lock file
 * Adding $lastRun parameter to the cron.afterRun event
-* Adding Laravel 5 support
+* Adding Laravel 5 composer support
 * Removing return-string truncating after 500 characters
 * Fixing cron.afterRun event
 
@@ -533,7 +590,7 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 
 The MIT License (MIT)
 
-Copyright (c) 2014 Marc Liebig
+Copyright (c) 2015 Marc Liebig
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
