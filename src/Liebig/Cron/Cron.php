@@ -159,12 +159,7 @@ class Cron {
             \Event::fire('cron.beforeRun', array($runDate->getTimestamp()));
 
             // Check if prevent job overlapping is enabled and create lock file if true
-            $preventOverlapping = false;
-            if (self::$laravelVersion >= 5) {
-                $preventOverlapping = \Config::get('liebigCron.preventOverlapping');
-            } else {
-                $preventOverlapping = \Config::get('cron::preventOverlapping');
-            }
+            $preventOverlapping = self::getConfig('preventOverlapping', false);
 
             if (is_bool($preventOverlapping) && $preventOverlapping) {
 
@@ -504,12 +499,7 @@ class Cron {
             }
         }
 
-        $laravelLogging = true;
-        if (self::$laravelVersion >= 5) {
-            $laravelLogging = \Config::get('liebigCron.laravelLogging');
-        } else {
-            $laravelLogging = \Config::get('cron::laravelLogging');
-        }
+        $laravelLogging = self::getConfig('laravelLogging');
 
         // If Laravel logging is enabled
         if (is_bool($laravelLogging) && $laravelLogging) {
@@ -553,11 +543,7 @@ class Cron {
      */
     public static function setLaravelLogging($bool) {
         if (is_bool($bool)) {
-            if (self::$laravelVersion >= 5) {
-                \Config::set('liebigCron.laravelLogging', $bool);
-            } else {
-                \Config::set('cron::laravelLogging', $bool);
-            }
+            self::setConfig('laravelLogging', $bool);
         } else {
             throw new \InvalidArgumentException('Function paramter $bool with value "' . $bool . '" is not a boolean.');
         }
@@ -571,13 +557,8 @@ class Cron {
      * @throws \UnexpectedValueException if the cron::laravelLogging config value is not a boolean or NULL
      */
     public static function isLaravelLogging() {
-        $laravelLogging = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $laravelLogging = \Config::get('liebigCron.laravelLogging');
-        } else {
-            $laravelLogging = \Config::get('cron::laravelLogging');
-        }
+        
+        $laravelLogging = self::getConfig('laravelLogging');
 
         if (is_null($laravelLogging) || is_bool($laravelLogging)) {
             return $laravelLogging;
@@ -595,11 +576,7 @@ class Cron {
      */
     public static function setDatabaseLogging($bool) {
         if (is_bool($bool)) {
-            if (self::$laravelVersion >= 5) {
-                \Config::set('liebigCron.databaseLogging', $bool);
-            } else {
-                \Config::set('cron::databaseLogging', $bool);
-            }
+            self::setConfig('databaseLogging', $bool);
         } else {
             throw new \InvalidArgumentException('Function paramter $bool with value "' . $bool . '" is not a boolean.');
         }
@@ -613,14 +590,8 @@ class Cron {
      * @throws \UnexpectedValueException if the cron::databaseLogging config value is not a boolean
      */
     public static function isDatabaseLogging() {
-        $databaseLogging = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $databaseLogging = \Config::get('liebigCron.databaseLogging');
-        } else {
-            $databaseLogging = \Config::get('cron::databaseLogging');
-        }
-
+        $databaseLogging = self::getConfig('databaseLogging');
+        
         if (is_null($databaseLogging)) {
             // If the value is not set, return false
             return false;
@@ -641,11 +612,7 @@ class Cron {
      */
     public static function setLogOnlyErrorJobsToDatabase($bool) {
         if (is_bool($bool)) {
-            if (self::$laravelVersion >= 5) {
-                \Config::set('liebigCron.logOnlyErrorJobsToDatabase', $bool);
-            } else {
-                \Config::set('cron::logOnlyErrorJobsToDatabase', $bool);
-            }
+            self::setConfig('logOnlyErrorJobsToDatabase', $bool);
         } else {
             throw new \InvalidArgumentException('Function paramter $bool with value "' . $bool . '" is not a boolean.');
         }
@@ -658,14 +625,9 @@ class Cron {
      * @throws \UnexpectedValueException if the cron::logOnlyErrorJobsToDatabase config value is not a boolean
      */
     public static function isLogOnlyErrorJobsToDatabase() {
-        $logOnlyErrorJobsToDatabase = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $logOnlyErrorJobsToDatabase = \Config::get('liebigCron.logOnlyErrorJobsToDatabase');
-        } else {
-            $logOnlyErrorJobsToDatabase = \Config::get('cron::logOnlyErrorJobsToDatabase');
-        }
-
+        
+        $logOnlyErrorJobsToDatabase = self::getConfig('logOnlyErrorJobsToDatabase');
+        
         if (is_null($logOnlyErrorJobsToDatabase)) {
             // If the value is not set, return false
             return false;
@@ -696,11 +658,7 @@ class Cron {
      */
     public static function setRunInterval($minutes) {
         if (is_int($minutes)) {
-            if (self::$laravelVersion >= 5) {
-                \Config::set('liebigCron.runInterval', $minutes);
-            } else {
-                \Config::set('cron::runInterval', $minutes);
-            }
+            self::setConfig('runInterval', $minutes);
         } else {
             throw new \InvalidArgumentException('Function paramter $minutes with value "' . $minutes . '" is not an integer.');
         }
@@ -713,14 +671,9 @@ class Cron {
      * @throws \UnexpectedValueException if the cron::runInterval config value is not an integer or NULL
      */
     public static function getRunInterval() {
-        $interval = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $interval = \Config::get('liebigCron.runInterval');
-        } else {
-            $interval = \Config::get('cron::runInterval');
-        }
-
+        
+        $interval = self::getConfig('runInterval');
+        
         if (is_null($interval) || is_int($interval)) {
             return $interval;
         } else {
@@ -737,11 +690,7 @@ class Cron {
      */
     public static function setDeleteDatabaseEntriesAfter($hours = 0) {
         if (is_int($hours)) {
-            if (self::$laravelVersion >= 5) {
-                \Config::set('liebigCron.deleteDatabaseEntriesAfter', $hours);
-            } else {
-                \Config::set('cron::deleteDatabaseEntriesAfter', $hours);
-            }
+            self::setConfig('deleteDatabaseEntriesAfter', $hours);
         } else {
             throw new \InvalidArgumentException('Function paramter $hours with value "' . $hours . '" is not an integer.');
         }
@@ -754,14 +703,9 @@ class Cron {
      * @throws \UnexpectedValueException if the cron::deleteDatabaseEntriesAfter config value is not an integer or NULL
      */
     public static function getDeleteDatabaseEntriesAfter() {
-        $deleteDatabaseEntriesAfter = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $deleteDatabaseEntriesAfter = \Config::get('liebigCron.deleteDatabaseEntriesAfter');
-        } else {
-            $deleteDatabaseEntriesAfter = \Config::get('cron::deleteDatabaseEntriesAfter');
-        }
-
+        
+        $deleteDatabaseEntriesAfter = self::getConfig('deleteDatabaseEntriesAfter');
+        
         if (is_null($deleteDatabaseEntriesAfter) || is_int($deleteDatabaseEntriesAfter)) {
             return $deleteDatabaseEntriesAfter;
         } else {
@@ -870,11 +814,7 @@ class Cron {
      * @static
      */
     public static function setEnablePreventOverlapping() {
-        if (self::$laravelVersion >= 5) {
-            \Config::set('liebigCron.preventOverlapping', true);
-        } else {
-            \Config::set('cron::preventOverlapping', true);
-        }
+        self::setConfig('preventOverlapping', true);
     }
 
     /**
@@ -883,11 +823,7 @@ class Cron {
      * @static
      */
     public static function setDisablePreventOverlapping() {
-        if (self::$laravelVersion >= 5) {
-            \Config::set('liebigCron.preventOverlapping', false);
-        } else {
-            \Config::set('cron::preventOverlapping', false);
-        }
+        self::setConfig('preventOverlapping', false);
     }
 
     /**
@@ -897,14 +833,9 @@ class Cron {
      * @return bool Return boolean if prevent job overlapping is enabled (true) or disabled (false)
      */
     public static function isPreventOverlapping() {
-        $preventOverlapping = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $preventOverlapping = \Config::get('liebigCron.preventOverlapping');
-        } else {
-            $preventOverlapping = \Config::get('cron::preventOverlapping');
-        }
-
+        
+        $preventOverlapping = self::getConfig('preventOverlapping');
+        
         if (is_bool($preventOverlapping)) {
             return $preventOverlapping;
         } else {
@@ -919,11 +850,7 @@ class Cron {
      * @static
      */
     public static function setEnableInTimeCheck() {
-        if (self::$laravelVersion >= 5) {
-            \Config::set('liebigCron.inTimeCheck', true);
-        } else {
-            \Config::set('cron::inTimeCheck', true);
-        }
+        self::setConfig('inTimeCheck', true);
     }
 
     /**
@@ -932,11 +859,7 @@ class Cron {
      * @static
      */
     public static function setDisableInTimeCheck() {
-        if (self::$laravelVersion >= 5) {
-            \Config::set('liebigCron.inTimeCheck', true);
-        } else {
-            \Config::set('cron::inTimeCheck', true);
-        }
+        self::setConfig('inTimeCheck', false);
     }
 
     /**
@@ -946,14 +869,9 @@ class Cron {
      * @return bool Return boolean if the Cron run in time check is enabled (true) or disabled (false)
      */
     public static function isInTimeCheck() {
-        $inTimeCheck = NULL;
-
-        if (self::$laravelVersion >= 5) {
-            $inTimeCheck = \Config::get('liebigCron.inTimeCheck');
-        } else {
-            $inTimeCheck = \Config::get('cron::inTimeCheck');
-        }
-
+        
+        $inTimeCheck = self::getConfig('inTimeCheck');
+        
         if (is_bool($inTimeCheck)) {
             return $inTimeCheck;
         } else {
@@ -971,5 +889,36 @@ class Cron {
     public static function getCronJobs() {
         return self::$cronJobs;
     }
+    
+    /**
+     * Get Config value
+     *
+     * @static
+     * @param  string $key Config key to get the value for
+     * @param  mixed $defaultValue If no value for the given key is available, return this default value
+     */
+    private static function getConfig($key, $defaultValue = NULL) {
+        $configValue = $defaultValue;
+        if (self::$laravelVersion >= 5) {
+           $configValue = \Config::get('liebigCron.' . $key);
+        } else {
+           $configValue = \Config::get('cron::' . $key);
+        }
+        return $configValue;
+    }
 
+    /**
+     * Set config value
+     *
+     * @static
+     * @param  string $key Config key to set the value for
+     * @param  mixed $value Value which should be set
+     */
+    private static function setConfig($key, $value) {
+        if (self::$laravelVersion >= 5) {
+            \Config::set('liebigCron.' . $key, $value);
+        } else {
+            \Config::set('cron::' . $key, $value);
+        }
+    }
 }
