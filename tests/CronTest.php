@@ -1436,20 +1436,21 @@ class CronTest extends TestCase {
      *  @covers \Liebig\Cron\ListCommand
      */
     public function testListCommand() {
+       
+        $commandOutput = '';
 	
-        // Disabled Function in Laravel 5
-        // because cannot save/redirect output from Laravel 5 Artisan command
         if($this->laravelVersion >= 5) {
-                return;
+            \Artisan::call('cron:list', array());
+            $commandOutput = \Artisan::output();
+        } else {
+            $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+                fopen('php://output', 'w')
+            );
+            ob_start();
+            \Artisan::call('cron:list', array(), $outputStream);
+            $commandOutput = ob_get_clean();
         }
 	
-        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
-            fopen('php://output', 'w')
-        );
-        ob_start();
-        \Artisan::call('cron:list', array(), $outputStream);
-        $commandOutput = ob_get_clean();
-        
         $this->assertTrue(is_int(strpos($commandOutput, 'Jobname')));
         $this->assertTrue(is_int(strpos($commandOutput, 'Expression')));
         $this->assertTrue(is_int(strpos($commandOutput, 'Activated')));
@@ -1464,12 +1465,17 @@ class CronTest extends TestCase {
             }, false);
         });
         
-        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
-            fopen('php://output', 'w')
-        );
-        ob_start();
-        \Artisan::call('cron:list', array(), $outputStream);
-        $commandOutput = ob_get_clean();
+        if($this->laravelVersion >= 5) {
+            \Artisan::call('cron:list', array());
+            $commandOutput = \Artisan::output();
+        } else {
+            $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+                fopen('php://output', 'w')
+            );
+            ob_start();
+            \Artisan::call('cron:list', array(), $outputStream);
+            $commandOutput = ob_get_clean();
+        }
         
         $this->assertTrue(is_int(strpos($commandOutput, 'Jobname')));
         $this->assertTrue(is_int(strpos($commandOutput, 'Expression')));
@@ -1488,18 +1494,19 @@ class CronTest extends TestCase {
      */
     public function testKeygenCommand() {
 	
-        // Disabled Function in Laravel 5
-        // because cannot save/redirect output from Laravel 5 Artisan command
-        if($this->laravelVersion >= 5) {
-                return;
+        $commandOutput = '';
+        
+	if($this->laravelVersion >= 5) {
+            \Artisan::call('cron:keygen', array());
+            $commandOutput = \Artisan::output();
+        } else {
+            $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+                fopen('php://output', 'w')
+            );
+            ob_start();
+            \Artisan::call('cron:keygen', array(), $outputStream);
+            $commandOutput = ob_get_clean();
         }
-	
-        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
-            fopen('php://output', 'w')
-        );
-        ob_start();
-        \Artisan::call('cron:keygen', array(), $outputStream);
-        $commandOutput = ob_get_clean();
         
         $commandOutput = str_replace("\r",'', $commandOutput);
         $commandOutput = str_replace("\n",'', $commandOutput);
@@ -1507,13 +1514,17 @@ class CronTest extends TestCase {
         $this->assertEquals(32, strlen($commandOutput));
         $this->assertTrue(ctype_alnum($commandOutput));
   
-        
-        $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
-            fopen('php://output', 'w')
-        );
-        ob_start();
-        \Artisan::call('cron:keygen', array('length' => 5), $outputStream);
-        $commandOutput = ob_get_clean();
+        if($this->laravelVersion >= 5) {
+            \Artisan::call('cron:keygen', array('length' => 5));
+            $commandOutput = \Artisan::output();
+        } else {
+            $outputStream = new \Symfony\Component\Console\Output\StreamOutput(
+                fopen('php://output', 'w')
+            );
+            ob_start();
+            \Artisan::call('cron:keygen', array('length' => 5), $outputStream);
+            $commandOutput = ob_get_clean();
+        }
         
         $commandOutput = str_replace("\r",'', $commandOutput);
         $commandOutput = str_replace("\n",'', $commandOutput);
