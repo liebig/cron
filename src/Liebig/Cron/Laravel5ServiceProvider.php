@@ -1,14 +1,12 @@
 <?php 
 
-/*namespace App\Providers;*/
-
 namespace Liebig\Cron;
 
 use Illuminate\Support\ServiceProvider;
 
 class Laravel5ServiceProvider extends ServiceProvider {
 
-	/**
+    /**
      * Indicates if loading of the provider is deferred.
      *
      * @var bool
