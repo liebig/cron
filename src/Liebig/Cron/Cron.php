@@ -256,8 +256,9 @@ class Cron {
                     try {
                         $return = $job['function']();
                     } catch (\Exception $e) {
-                        // If an uncatched  exception occurs
-                        $return = 'Exception in job ' . $job['name'] . ': ' . $e->getMessage();
+                        // If an uncaught exception occurs
+                        $return = get_class($e) . ' in job ' . $job['name'] . ': ' . $e->getMessage();
+                        self::log('error', get_class($e) . ' in job ' . $job['name'] . ': ' . $e->getMessage() . "\r\n" . $e->getTraceAsString());
                     }
 
                     // Get the end time of the job runtime
