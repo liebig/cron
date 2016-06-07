@@ -38,7 +38,7 @@ class RunCommand extends Command {
         // Fire event before the Cron jobs will be executed
         \Event::fire('cron.collectJobs');
         $report = Cron::run();
-        
+
         if($report['inTime'] === -1) {
             $inTime = -1;
         } else if ($report['inTime']) {
@@ -47,10 +47,22 @@ class RunCommand extends Command {
             $inTime = 'false';
         }
 
-        // Create table.
-        $table = $this->getHelperSet()->get('table');
-        $table->setHeaders(array('Run date', 'In time', 'Run time', 'Errors', 'Jobs'));
-        $table->addRow(array($report['rundate'], $inTime, round($report['runtime'], 4), $report['errors'], count($report['crons'])));
+        // Get Laravel version
+        $laravel = app();
+        $version = $laravel::VERSION;
+
+        if ($version < '5.2') {
+          // Create table for old Laravel versions.
+          $table = $this->getHelperSet()->get('table');
+          $table->setHeaders(array('Run date', 'In time', 'Run time', 'Errors', 'Jobs'));
+          $table->addRow(array($report['rundate'], $inTime, round($report['runtime'], 4), $report['errors'], count($report['crons'])));
+        } else {
+          // Create table for new Laravel versions.
+          $table = new \Symfony\Component\Console\Helper\Table($this->getOutput());
+          $table
+            ->setHeaders(array('Run date', 'In time', 'Run time', 'Errors', 'Jobs'))
+            ->setRows(array(array($report['rundate'], $inTime, round($report['runtime'], 4), $report['errors'], count($report['crons']))));
+        }
 
         // Output table.
         $table->render($this->getOutput());
