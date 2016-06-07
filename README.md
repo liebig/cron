@@ -1,4 +1,4 @@
-# ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron ![project status](http://stillmaintained.com/liebig/cron.png)
+# ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron
 Job scheduling for Laravel
 
 Cron can be used for easily performing cron jobs in Laravel. If you want to run jobs from the internet or just from the local computer, Cron can help you. For more information how Cron can simplify your job scheduling, please have a look at the [raison d'être](#raison).
@@ -36,7 +36,7 @@ Cron can be used for easily performing cron jobs in Laravel. If you want to run 
 ## Raison d’être
 
 ### Simplicity
-The aim is to create a simple way to define cron jobs with Laravel. Creating cron jobs with Cron is easy because this tool provides you with a lot of events that you can use to manage all your jobs. For creating a job you only need a job name, a cron expression and a function which will be called as soon as the time has come. Of course PHP is only running if you call it, so you need something in addition which starts Cron. 
+The aim is to create a simple way to define cron jobs with Laravel. Creating cron jobs with Cron is easy because this tool provides you with a lot of events that you can use to manage all your jobs. For creating a job you only need a job name, a cron expression and a function which will be called as soon as the time has come. Of course PHP is only running if you call it, so you need something in addition which starts Cron.
 
 ### Accessibility
 The Cron starting call can be executed from the same machine where your Laravel is located (for example with crontab) or from everywhere on the internet (for example from a web cron service) - it is just a command execution or route call.
@@ -61,7 +61,7 @@ At last, Cron is my personal way to manage job scheduling. I am a web applicatio
 ### Laravel 5
 
 1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
-2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory 
+2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory
 3.  Add `'Liebig\Cron\Laravel5ServiceProvider'` to your `'providers'` array in the `/path/to/laravel/config/app.php` file
 4.  Migrate the database with running the command `php artisan migrate --path=vendor/liebig/cron/src/migrations`
 5.  Publish the configuration file with running the command `php artisan vendor:publish` - now you find the Cron configuration file at `/path/to/laravel/config/liebigCron.php` and this file won't be overwritten at any update
@@ -70,7 +70,7 @@ At last, Cron is my personal way to manage job scheduling. I am a web applicatio
 ### Laravel 4
 
 1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
-2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory 
+2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory
 3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `/path/to/laravel/app/config/app.php` file
 4.  Migrate the database with running the command `php artisan migrate --package="liebig/cron"`
 5.  Publish the configuration file with running the command `php artisan config:publish liebig/cron` - now you find the Cron configuration file at `/path/to/laravel/app/config/packages/liebig/cron` and this file won't be overwritten at any update
@@ -115,7 +115,7 @@ class AppServiceProvider extends ServiceProvider {
      * @return void
      */
     public function boot() {
-        // Please note the different namespace 
+        // Please note the different namespace
         // and please add a \ in front of your classes in the global namespace
         \Event::listen('cron.collectJobs', function() {
 
@@ -144,12 +144,12 @@ Event::listen('cron.collectJobs', function() {
                     // Do some crazy things unsuccessfully every minute
                     return 'No';
                 });
-                
+
     Cron::add('example2', '*/2 * * * *', function() {
         // Do some crazy things successfully every two minute
         return null;
     });
-    
+
     Cron::add('disabled job', '0 * * * *', function() {
         // Do some crazy things successfully every hour
     }, false);
@@ -161,7 +161,7 @@ Inside the anonymous function you can use all the Laravel and Cron functions. In
 ### Using Cron's integrated route
 If you don't have shell access to your server, you can easily use an online cronjob service (Google knows some good provider). This provider will run Cron's route in a defined interval. The Cron route has to be protected because if someone else than the service provider invokes it, our jobs will be executed too often. For that reason we need a security key in addition to the route path. This key can be generated with the `php artisan cron:keygen` command call and has to be set in the Cron config file at the key `cronKey`.
 ```php
-    // Cron application key for securing the integrated Cron run route - if the value is empty, the route is disabled 
+    // Cron application key for securing the integrated Cron run route - if the value is empty, the route is disabled
     'cronKey' => '1PBgabAXdoLTy3JDyi0xRpTR2qNrkkQy'
 ```
 Now you have to configure the address and run interval at your online cronjob service provider. The address for the integrated Cron route is always `http://yourdomain.com/cron.php?key=securitykey`. For the above example this address could be `http://exampledomain.com/cron.php?key=1PBgabAXdoLTy3JDyi0xRpTR2qNrkkQy` and the run interval has to be every minute (due to the job with the name "example1"). Now the jobs were added, the route key was generated and the service provider was configured.
@@ -200,7 +200,7 @@ The **expression** is a string of five or optional six subexpressions that descr
     +------------------------- min (0 - 59)
 ```
 
-The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in the case of success or anything else if there was an error while executing this job. By default, the error case will be logged to the database and to a Monolog logger object (if logger is enabled). 
+The given anonymous **function** will be invoked if the expression details match with the current timestamp. This function should return null in the case of success or anything else if there was an error while executing this job. By default, the error case will be logged to the database and to a Monolog logger object (if logger is enabled).
 
 The **isEnabled** boolean parameter makes it possible to deactivate a job from execution without removing it completely. Later the job execution can be enabled very easily by giving a true boolean to the method. This parameter is optional and the default value is enabled.
 
@@ -241,7 +241,7 @@ public static function remove($name) {
 ---
 
 <a name="enabledisable"></a>
-### Enable or disable a cron job 
+### Enable or disable a cron job
 
 After adding an enabled or disabled cron job ($isEnabled boolean parameter of the add method call) you can disable or enable a cron job by name. For this use the **setEnableJob** or **setDisableJob** function.
 
@@ -368,7 +368,7 @@ public static function setLogger(\Monolog\Logger $logger = null) {
 
 #### Getter
 
-To recieve the set logger object use the static `getLogger()` method. If no logger object is set, null will be returned. 
+To recieve the set logger object use the static `getLogger()` method. If no logger object is set, null will be returned.
 
 ---
 
@@ -396,7 +396,7 @@ To receive the current boolean value of the logging to database variable, just u
 <a name="logonlyerrorjobstodatabase"></a>
 ### Log only error jobs to database
 
-By default Cron will log all jobs to database. Maybe sometimes you want to log only error jobs (which not return null) to database by using the static **setLogOnlyErrorJobsToDatabase** function. 
+By default Cron will log all jobs to database. Maybe sometimes you want to log only error jobs (which not return null) to database by using the static **setLogOnlyErrorJobsToDatabase** function.
 
 ```php
 public static function setLogOnlyErrorJobsToDatabase($bool) {
@@ -525,7 +525,7 @@ public static function reset() {
 ## Frequently Asked Questions
 
 ### Do I really need crontab or an online cronjob service
-Yes, you do. In comparison to a Java application server for example, PHP only runs if it is executed. If crontab or an online cronjob service provider calls PHP and starts the application, Cron can execute the jobs and will start the work. If PHP is not started, the application sleeps and nothing happens. 
+Yes, you do. In comparison to a Java application server for example, PHP only runs if it is executed. If crontab or an online cronjob service provider calls PHP and starts the application, Cron can execute the jobs and will start the work. If PHP is not started, the application sleeps and nothing happens.
 
 ### What is the best interval to call the route or command?
 The best interval depends on your jobs. If one job should be executed every minute and another every five minutes, the route or command has to be called every minute. In general you have to find the greatest common divisor of your jobs. Please don't forget to change the `runInterval` config value if the route or command is not called every minute (default value) and if you want to use Cron's in time check.
@@ -537,6 +537,9 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 
 <a name="changelog"></a>
 ## Changelog
+
+### 2016/06/07 - 1.1.1
+* Fixing bug with Laravel 5.2
 
 ### 2015/03/02 - 1.1.0
 * Adding Laravel 5 support
@@ -590,7 +593,7 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Marc Liebig
+Copyright (c) 2013 - 2016 Marc Liebig
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
