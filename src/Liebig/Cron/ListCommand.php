@@ -41,22 +41,48 @@ class ListCommand extends Command {
         // Get all registered Cron jobs
         $jobs = Cron::getCronJobs();
 
-        // Create the table helper with headers.
-        $table = $this->getHelperSet()->get('table');
-        $table->setHeaders(array('Jobname', 'Expression', 'Activated'));
+        // Get Laravel version
+        $laravel = app();
+        $version = $laravel::VERSION;
 
-        // Run through all registered jobs
-        for ($i = 0; $i < count($jobs); $i++) {
+        if ($version < '5.2') {
+            // Create the table helper with headers.
+            $table = $this->getHelperSet()->get('table');
+            $table->setHeaders(array('Jobname', 'Expression', 'Activated'));
 
-            // Get current job entry
-            $job = $jobs[$i];
+            // Run through all registered jobs
+            for ($i = 0; $i < count($jobs); $i++) {
 
-            // If job is enabled or disable use the defined string instead of 1 or 0
-            $enabled = $job['enabled'] ? 'Enabled' : 'Disabled';
+                // Get current job entry
+                $job = $jobs[$i];
 
-            // Add this job to the table.
-            $table->addRow(array($job['name'], $job['expression']->getExpression(), $enabled));
+                // If job is enabled or disable use the defined string instead of 1 or 0
+                $enabled = $job['enabled'] ? 'Enabled' : 'Disabled';
+
+                // Add this job to the table.
+                $table->addRow(array($job['name'], $job['expression']->getExpression(), $enabled));
+            }
+        } else {
+            // Create table for new Laravel versions.
+          $table = new \Symfony\Component\Console\Helper\Table($this->getOutput());
+          $table->setHeaders(array('Jobname', 'Expression', 'Activated'));
+
+          $rows = [];
+          // Run through all registered jobs
+          for ($i = 0; $i < count($jobs); $i++) {
+             // Get current job entry
+                $job = $jobs[$i];
+
+                // If job is enabled or disable use the defined string instead of 1 or 0
+                $enabled = $job['enabled'] ? 'Enabled' : 'Disabled';
+                
+                array_push($rows, array($job['name'], $job['expression']->getExpression(), $enabled));
+               
+          }
+
+           $table->setRows($rows);
         }
+
 
         // Render and output the table.
         $table->render($this->getOutput());
