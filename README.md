@@ -538,6 +538,9 @@ By default Cron prevents overlapping. This means that only one Cron instance wil
 <a name="changelog"></a>
 ## Changelog
 
+### 2016/11/15 - 1.1.2
+* Adding support for Symfonys 3 Table class in Laravel 5.2
+
 ### 2016/06/07 - 1.1.1
 * Fixing bug with Laravel 5.2
 
