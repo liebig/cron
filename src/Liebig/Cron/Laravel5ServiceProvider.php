@@ -68,23 +68,26 @@ class Laravel5ServiceProvider extends ServiceProvider {
 	 */
 	public function register() {
 
-            $this->app['cron'] = $this->app->share(function($app) {
+            $this->app->singleton('cron', function () {
                 return new Cron;
             });
-            
+
             $this->app->booting(function() {
                         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
                         $loader->alias('Cron', 'Liebig\Cron\Facades\Cron');
                     });
-            $this->app['cron::command.run'] = $this->app->share(function($app) {
+
+            $this->app->singleton('cron::command.run', function () {
                         return new RunCommand;
                     });
             $this->commands('cron::command.run');
-            $this->app['cron::command.list'] = $this->app->share(function($app) {
+
+            $this->app->singleton('cron::command.list', function () {
                         return new ListCommand;
                     });
             $this->commands('cron::command.list');
-            $this->app['cron::command.keygen'] = $this->app->share(function($app) {
+
+            $this->app->singleton('cron::command.keygen', function () {
                         return new KeygenCommand;
                     });
             $this->commands('cron::command.keygen');
