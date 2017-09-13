@@ -30,6 +30,15 @@ class RunCommand extends Command {
     }
 
     /**
+     * Execute the console command for Laravel > 5.5.
+     *
+     * @return void
+     */
+    public function handle() {
+        $this->fire();
+    }
+    
+    /**
      * Execute the console command.
      *
      * @return void

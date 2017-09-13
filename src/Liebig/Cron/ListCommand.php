@@ -28,7 +28,16 @@ class ListCommand extends Command {
     public function __construct() {
         parent::__construct();
     }
-
+    
+    /**
+     * Execute the console command for Laravel > 5.5.
+     *
+     * @return void
+     */
+    public function handle() {
+        $this->fire();
+    }
+    
     /**
      * Execute the console command.
      *
