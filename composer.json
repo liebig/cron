@@ -25,5 +25,12 @@
             "Liebig\\Cron": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Liebig\\Cron\\Laravel5ServiceProvider"
+            ]
+        }
+    }
 }
