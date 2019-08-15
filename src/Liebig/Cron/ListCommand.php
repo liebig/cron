@@ -46,7 +46,7 @@ class ListCommand extends Command {
     public function fire() {
         // Get the current timestamp and fire the collect event
         $runDate = new \DateTime();
-        \Event::fire('cron.collectJobs', array($runDate->getTimestamp()));
+        \Event::dispatch('cron.collectJobs', array($runDate->getTimestamp()));
         // Get all registered Cron jobs
         $jobs = Cron::getCronJobs();
 

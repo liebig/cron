@@ -156,7 +156,7 @@ class Cron {
             $runDate = new \DateTime();
 
             // Fire event before the Cron run will be executed
-            \Event::fire('cron.beforeRun', array($runDate->getTimestamp()));
+            \Event::dispatch('cron.beforeRun', array($runDate->getTimestamp()));
 
             // Check if prevent job overlapping is enabled and create lock file if true
             $preventOverlapping = self::getConfig('preventOverlapping', false);
@@ -187,10 +187,10 @@ class Cron {
                         }
 
                         // Fire the Cron locked event
-                        \Event::fire('cron.locked', array('lockfile' => $lockFile));
+                        \Event::dispatch('cron.locked', array('lockfile' => $lockFile));
 
                         // Fire the after run event, because we are done here
-                        \Event::fire('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array()));
+                        \Event::dispatch('cron.afterRun', array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array()));
                         return array('rundate' => $runDate->getTimestamp(), 'inTime' => -1, 'runtime' => -1, 'errors' => 0, 'crons' => array(), 'lastRun' => array());
                     } else {
 
@@ -271,10 +271,10 @@ class Cron {
                         // Log error job
                         self::log('error', 'Job with the name ' . $job['name'] . ' was run with errors.');
                         // Fire event after executing a job with erros
-                        \Event::fire('cron.jobError', array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
+                        \Event::dispatch('cron.jobError', array('name' => $job['name'], 'return' => $return, 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
                     } else {
                         // Fire event after executing a job successfully
-                        \Event::fire('cron.jobSuccess', array('name' => $job['name'], 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
+                        \Event::dispatch('cron.jobSuccess', array('name' => $job['name'], 'runtime' => ($afterOne - $beforeOne), 'rundate' => $runDate->getTimestamp()));
                     }
 
                     // Push the information of the ran cron job to the allJobs array (including name, return value, runtime)
@@ -357,7 +357,7 @@ class Cron {
             }
 
             // Fire event after the Cron run was executed
-            \Event::fire('cron.afterRun', $returnArray);
+            \Event::dispatch('cron.afterRun', $returnArray);
 
             // Return the cron jobs array (including rundate, in-time boolean, runtime in seconds, number of errors and an array with the cron jobs reports)
             return $returnArray;
