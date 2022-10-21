@@ -1,4 +1,4 @@
-# ![alt text](https://raw.github.com/liebig/cron/master/icon.png "Cron") Cron
+# ![alt text](https://raw.github.com/liebig/cron/main/icon.png "Cron") Cron
 Job scheduling for Laravel
 
 Cron can be used for easily performing cron jobs in Laravel. If you want to run jobs from the internet or just from the local computer, Cron can help you. For more information how Cron can simplify your job scheduling, please have a look at the [raison d'être](#raison).
@@ -69,7 +69,7 @@ At last, Cron is my personal way to manage job scheduling. I am a web applicatio
 
 ### Laravel 4
 
-1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
+1.  Add `"liebig/cron": "dev-main"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
 2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory
 3.  Add `'Liebig\Cron\CronServiceProvider'` to your `'providers'` array in the `/path/to/laravel/app/config/app.php` file
 4.  Migrate the database with running the command `php artisan migrate --package="liebig/cron"`
