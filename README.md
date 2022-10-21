@@ -60,7 +60,7 @@ At last, Cron is my personal way to manage job scheduling. I am a web applicatio
 
 ### Laravel 5
 
-1.  Add `"liebig/cron": "dev-master"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
+1.  Add `"liebig/cron": "dev-main"` to your `/path/to/laravel/composer.json` file at the `"require":` section (Find more about composer at http://getcomposer.org/)
 2.  Run the `composer update liebig/cron --no-dev` command in your shell from your `/path/to/laravel/` directory
 3.  If you're on Laravel 5.4 or earlier, add `'Liebig\Cron\Laravel5ServiceProvider'` to your `'providers'` array in the `/path/to/laravel/config/app.php` file
 4.  Migrate the database with running the command `php artisan migrate --path=vendor/liebig/cron/src/migrations`
